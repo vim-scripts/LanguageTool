@@ -1,0 +1,68 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=3223
+
+This plugin integrates the LanguageTool grammar checker into Vim.
+Current version of LanguageTool can check grammar in many languages: 
+en, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca, da, ml, be.
+See http://www.languagetool.org/ for more information about LanguageTool.
+
+The script defines 2 commands:
+
+* Use  :LanguageToolCheck  to check grammar in current buffer.
+  This will check for grammar mistakes in text of current buffer 
+  and highlight the errors.  It also opens a new scratch window with the
+  list of grammar mistakes with further explanations for each error.
+  Pressing <Enter> or clicking on an error in scratch buffer will jump
+  to that error.  The location list for the buffer being checked
+  is also populated.  So you can use location commands such as
+  :lopen to open the location list window, :lne to jump to the 
+  next error, etc. The :LanguageToolCheck command accepts a
+  range. You can for example check grammar between lines
+  100 and 200 in buffer with :100,200LanguageToolCheck.
+
+* Use  :LanguageToolClear  to remove highlighting of grammatical errors
+  and close the scratch window containing the list of errors.
+
+See screenshots of grammar checking in English and French at:
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
+
+You can customize this plugin by setting the following variables in 
+your ~/.vimrc (plugin already sets default values).
+
+  g:languagetool_jar  
+      This variable specifies the location of the LanguageTool java
+      grammar checker program.
+      Default is: $HOME/JLanguageTool/dist/LanguageTool.jar
+
+  g:languagetool_disable_rules
+      This variable specifies checker rules which are disabled.
+      Each disabled rule must be comma separated
+      Default is: WHITESPACE_RULE,EN_QUOTES
+
+  g:languagetool_win_height
+      This variable specifies the height of the scratch window which 
+      contains all grammatical mistakes with some explanations. You 
+      can use a negative value to disable opening the scratch window.
+      Default is: 14
+
+You can also customize the following syntax highlighting groups:
+  LanguageToolError
+  LanguageToolCmd
+  LanguageToolLabel
+  LanguageToolErrorCount
+
+Language is selected automatically from the Vim 'spelllang' option.
+Character encoding is selected automatically from the Vim 'fenc' option
+or from 'enc' option if 'fenc' is empty.
+
+Bugs:  
+  Column number reported by LanguageTool indicating the location of the 
+  error is sometimes incorrect. There is an opened ticket about this bug: 
+  http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717 
+  The script currently works around it by doing pattern matching with  
+  information context but it is not a perfect workaround: it can cause 
+  spurious highlighting of errors in rare cases.
+
+License:
+  The VIM LICENSE applies to LanguageTool.vim plugin
+  (see ":help copyright" except use "LanguageTool.vim" instead of Vim").
