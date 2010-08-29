@@ -2,25 +2,27 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/08/28
-" Version:      0.8
+" Last Change:  2010/08/29
+" Version:      0.9
 " 
 " Long Description:
 "
 " This plugin integrates the LanguageTool grammar checker into Vim.
 " Current version of LanguageTool can check grammar in many languages: 
 " en, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca, da,
-" ml, be. See also http://www.languagetool.org/ for more information
-" about LanguageTool.
+" ml, be. See http://www.languagetool.org/ for more information about 
+" LanguageTool.
 "
 " The script defines 2 commands:
 "
 " * Use  :LanguageToolCheck  to check grammar in current buffer.
-"   This will check for grammatical mistakes in text of current buffer 
-"   and highlight the errors.  It also open a new scratch window with the
-"   list of grammatical errors with further explanations for each error.
+"   This will check for grammar mistakes in text of current buffer 
+"   and highlight the errors.  It also opens a new scratch window with the
+"   list of grammar errors with further explanations for each error.
+"   Pressing <Enter> on an error in scratch buffer will jump to that
+"   error.
 "
-" * Use  :LanguageToolClear  to remove highlighting of grammatical errors
+" * Use  :LanguageToolClear  to remove highlighting of grammar mistakes
 "   and close the scratch window containing the list of errors.
 "
 " See screenshots of grammar checking in English and French at:
@@ -28,7 +30,7 @@
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 "
 " You can customize this plugin by setting the following variables in 
-" your ~/.vimrc (plugin already sets default values).
+" your ~/.vimrc (plugin sets some default values).
 "
 "   g:languagetool_jar  
 "       This variable specifies the location of the LanguageTool java
@@ -46,8 +48,29 @@
 "       can use a negative value to disable opening the scratch window.
 "       Default is: 14
 "
+" You can also customize the following syntax highlighting groups:
+"   LanguageToolError
+"   LanguageToolCmd
+"   LanguageToolLabel
+"   LanguageToolErrorCount
+"
 " Language is selected automatically from the Vim 'spelllang' option.
 " Character encoding is selected automatically from the Vim 'fenc' option.
+"
+" Bugs: 
+"
+" * Column number reported by LanguageTool indicating the location of the
+"   error is sometimes incorrect. There is an opened ticket about this bug:
+"   http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
+"   The script currently works around it by doing patten matching with 
+"   information context but it's not a perfect workaround: it can cause
+"   spurious highlighting of errors in rare cases.
+"
+" ToDo:
+"
+" * Help page
+" * Mappings to jump to next/previous error
+" * Checking of text limited to visual selection
 "
 " Install Details:
 "
@@ -98,7 +121,42 @@ function s:LanguageToolSetUp()
   endif
 endfunction
 
-" This function performs grammatical check of text in the current buffer.
+" Jump to a grammar mistake (called when pressing <Enter> on a particular
+" error in scratch buffer.
+function <sid>JumpToCurrentError()
+  let l:save_cursor = getpos('.')
+  norm $
+  if search('^Error:\s\+', 'beW') > 0
+    let l:error_idx = expand('<cword>')
+    let l:error = s:errors[l:error_idx - 1]
+    let l:line = l:error[0]
+    let l:col  = l:error[1]
+    let l:rule = l:error[4]
+    call setpos('.', l:save_cursor)
+    exe s:languagetool_text_win . 'wincmd w'
+    exe 'norm ' . l:line . 'G0'
+
+    " The line number is correct but the column number given by LanguageTool is
+    " sometimes incorrect. See opened ticket:
+    " http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
+    " So finding the column is done using patten matching with information
+    " in error context.
+    let l:context = l:error[7][byteidx(l:error[7], l:error[8])
+    \                         :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
+
+    " This substitute allows matching when error spans multiple lines.
+    let l:re = substitute(l:context, ' ', '\\_\\s', 'g')
+
+    echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
+    \ . ' (' . l:rule . ') ...' . l:context . '... @ ' . l:line . 'L ' . l:col . 'C'
+    call search(l:re)
+  else
+    echo "No error under cursor"
+    call setpos('.', l:save_cursor)
+  endif
+endfunction
+
+" This function performs grammar checking of text in the current buffer.
 " It highlights grammar mistakes in current buffer and opens a scratch
 " window with all errors found.
 function s:LanguageToolCheck()
@@ -106,7 +164,7 @@ function s:LanguageToolCheck()
   call s:LanguageToolSetUp()
   call s:LanguageToolClear()
   sil %y
-  new
+  botright new
   sil put!
 
   " LanguageTool somehow gives incorrect line/column numbers when 
@@ -126,8 +184,8 @@ function s:LanguageToolCheck()
   call delete(l:tmpfilename)
 
   " Loop on all errors in XML output of LanguageTool and
-  " collect information about all errors in list l:errors
-  let l:errors = []
+  " collect information about all errors in list s:errors
+  let s:errors = []
   while search('^<error ', 'eW') > 0
     let l:l  = getline('.')
     let l:l1 = matchlist(l,  'fromy=\"\(\d\+\)\" '
@@ -147,13 +205,13 @@ function s:LanguageToolCheck()
     let l:error[1] += 1  
     let l:error[2] += 1
     let l:error[3] += 1
-    call add(l:errors, l:error)
+    call add(s:errors, l:error)
   endwhile
 
   if s:languagetool_win_height >= 0
     " Reformat the output of LanguageTool (XML is not human friendly) and
     " set up syntax highlighting in the buffer which shows all errors.
-    %d
+    sil %d
     call append(0, '# ' . l:languagetool_cmd)
     set bt=nofile
     setlocal nospell
@@ -162,9 +220,9 @@ function s:LanguageToolCheck()
     syn match LanguageToolLabel '^\(Pos\|Rule\|Context\|Message\|Correction\):'
     syn match LanguageToolErrorCount '^Error:\s\+\d\+.\d\+'
     let l:i = 0
-    for l:error in l:errors
+    for l:error in s:errors
       call append('$', 'Error:      ' 
-      \ . (l:i + 1) . '/' . len(l:errors)
+      \ . (l:i + 1) . '/' . len(s:errors)
       \ . ' ('  . l:error[4] . ')'
       \ . ' @ ' . l:error[0] . 'L '
       \ .         l:error[1] . 'C ')
@@ -181,16 +239,20 @@ function s:LanguageToolCheck()
     endfor
     exe "norm z" . s:languagetool_win_height . "\<CR>"
     0
-    let g:ErrorBuffer = bufnr('%')
+    let s:languagetool_error_buffer = bufnr('%')
+    map <silent> <buffer> <CR> :call <sid>JumpToCurrentError()<CR>
+    redraw
+    echo 'Press <Enter> on an error in scratch buffer to jump to the error'
     exe "norm \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
     bd!
-    unlet! g:ErrorBuffer 
+    unlet! s:languagetool_error_buffer
   endif
+  let s:languagetool_text_win = winnr()
 
   " Also highlight errors in original buffer.
-  for l:error in l:errors
+  for l:error in s:errors
     let l:re = l:error[7][byteidx(l:error[7], l:error[8])
     \                    :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
     " This substitute allows matching when error spans multiple lines.
@@ -202,17 +264,25 @@ endfunction
 " This function clears syntax highlighting created by LanguageTool plugin
 " and removes the scratch window containing grammatical errors.
 function s:LanguageToolClear()
-  syn clear LanguageToolError
-  if exists('g:ErrorBuffer') && bufexists(g:ErrorBuffer)
-    exe "bd " . g:ErrorBuffer
-    unlet g:ErrorBuffer
+  if exists('s:languagetool_error_buffer') 
+    if bufexists(s:languagetool_error_buffer)
+      exe "bd " . s:languagetool_error_buffer
+    endif
+    unlet s:languagetool_error_buffer
+  endif
+  if exists('s:languagetool_text_win') 
+    let l:win = winnr()
+    exe s:languagetool_text_win . 'wincmd w'
+    syn clear LanguageToolError
+    exe l:win . 'wincmd w'
+    unlet! s:languagetool_text_win
   endif
 endfunction
 
-hi def link LanguageToolCmd          Comment
-hi def link LanguageToolLabel        Label
-hi def link LanguageToolError        Error
-hi def link LanguageToolErrorCount   Title
+hi def link LanguageToolCmd        Comment
+hi def link LanguageToolLabel      Label
+hi def link LanguageToolError      Error
+hi def link LanguageToolErrorCount Title
 
 com! -nargs=0 LanguageToolCheck :call s:LanguageToolCheck()
 com! -nargs=0 LanguageToolClear :call s:LanguageToolClear()
