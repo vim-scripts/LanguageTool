@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/29
-" Version:      0.9
+" Version:      1.0
 " 
 " Long Description:
 "
@@ -69,15 +69,22 @@
 " ToDo:
 "
 " * Help page
-" * Mappings to jump to next/previous error
-" * Checking of text limited to visual selection
+" * Should use location list (not sure yet how this works).
+" * Implement checking of text limited to visual selection
+" * Handle mouse click (clicking on error to jump to it)
+" * Use balloons to show info about errors (for gvim only)
 "
 " Install Details:
 "
 " Copy this plugin script LanguageTool.vim in $HOME/.vim/plugin/.
 "
 " You also need to install the Java LanguageTool program in order to use
-" this plugin. LanguageTool can be downloaded and built as follows:
+" this plugin.  On Ubuntu, you need to install the ant, sun-java6-jdk, and cvs
+" packages:
+"
+" $ sudo apt-get install sun-java6-jdk ant cvs
+"
+" LanguageTool can then be downloaded and built as follows:
 "
 " $ cvs -z3 \
 " -d:pserver:anonymous@languagetool.cvs.sourceforge.net:/cvsroot/languagetool \
@@ -86,6 +93,10 @@
 " $ ant
 "
 " This should build JLanguageTool/dist/LanguageTool.jar.
+"
+" Downloading LanguageTool from CVS ensures you get the latest version.
+" Alternatively, rather than building LanguageTool.jar from CVS, you
+" can download the openoffice extension oxt and unzip it.
 "
 " You then need to set up g:languagetool_jar in your ~/.vimrc with
 " the location of the LanguageTool.jar file.
@@ -145,10 +156,11 @@ function <sid>JumpToCurrentError()
     \                         :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
 
     " This substitute allows matching when error spans multiple lines.
-    let l:re = substitute(l:context, ' ', '\\_\\s', 'g')
+    let l:re = '\V' . substitute(escape(l:context, "\'"), ' ', '\\_\\s', 'g')
 
     echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
-    \ . ' (' . l:rule . ') ...' . l:context . '... @ ' . l:line . 'L ' . l:col . 'C'
+    \ . ' (' . l:rule . ') ...' . l:context . '... @ ' 
+    \ . l:line . 'L ' . l:col . 'C'
     call search(l:re)
   else
     echo "No error under cursor"
@@ -242,7 +254,7 @@ function s:LanguageToolCheck()
     let s:languagetool_error_buffer = bufnr('%')
     map <silent> <buffer> <CR> :call <sid>JumpToCurrentError()<CR>
     redraw
-    echo 'Press <Enter> on an error in scratch buffer to jump to the error'
+    echo 'Press <Enter> on an error in scratch buffer to jump its location'
     exe "norm \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
@@ -256,7 +268,8 @@ function s:LanguageToolCheck()
     let l:re = l:error[7][byteidx(l:error[7], l:error[8])
     \                    :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
     " This substitute allows matching when error spans multiple lines.
-    let l:re = '\%' . l:error[0] . 'l' . substitute(l:re, ' ', '\\_\\s', 'g')
+    let l:re = '\%' . l:error[0] . 'l\V' 
+    \ . substitute(escape(l:re, "\'"), ' ', '\\_\\s', 'g')
     exe "syn match LanguageToolError '" . l:re . "'"
   endfor
 endfunction
