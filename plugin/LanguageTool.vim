@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/29
-" Version:      1.1
+" Version:      1.2
 " 
 " Long Description:
 "
@@ -114,12 +114,13 @@ endif
 let g:loaded_languagetool = "1"
 
 " Set up configuration.
+" Returns 0 if success, < 0 in case of error.
 function s:LanguageToolSetUp()
   let s:languagetool_jar = exists("g:languagetool_jar")
   \ ? g:languagetool_jar
   \ : $HOME . '/JLanguageTool/dist/LanguageTool.jar'
   let s:languagetool_disable_rules = exists("g:languagetool_disable_rules")
-  \ ? g:languagetool_jar
+  \ ? g:languagetool_disable_rules
   \ : 'WHITESPACE_RULE,EN_QUOTES'
   let s:languagetool_win_height = exists("g:languagetool_win_height")
   \ ? g:languagetool_win_height
@@ -131,13 +132,15 @@ function s:LanguageToolSetUp()
   let s:languagetool_lang = (&spelllang)[:1]
   if !filereadable(s:languagetool_jar)
     echomsg "LanguageTool cannot be found at: " . s:languagetool_jar
-    echomsg "You need to install LanguageTool and/or set up s:languagetool_jar"
-    finish
+    echomsg "You need to install LanguageTool and/or set up g:languagetool_jar"
+    return -1
   endif
+  return 0
 endfunction
 
 " Jump to a grammar mistake (called when pressing <Enter> or clicking
 " on a particular error in scratch buffer).
+" mouse parameter is 1 if called from a mouse event, 0 otherwise.
 function <sid>JumpToCurrentError(mouse)
   if a:mouse
     call feedkeys("\<LeftMouse>")
@@ -175,6 +178,7 @@ function <sid>JumpToCurrentError(mouse)
     \ . ' (' . l:rule . ') ...' . l:context . '... @ ' 
     \ . l:line . 'L ' . l:col . 'C'
     call search(l:re)
+    norm zz
   else
     echo "No error under cursor"
     call setpos('.', l:save_cursor)
@@ -184,12 +188,17 @@ endfunction
 " This function performs grammar checking of text in the current buffer.
 " It highlights grammar mistakes in current buffer and opens a scratch
 " window with all errors found.
+" Returns 0 if success, < 0 in case of error.
 function s:LanguageToolCheck()
   let l:save_cursor = getpos('.')
-  call s:LanguageToolSetUp()
+  if s:LanguageToolSetUp() < 0
+    return -1
+  endif
   call s:LanguageToolClear()
   sil %y
   botright new
+  let s:languagetool_error_buffer = bufnr('%')
+  let s:languagetool_error_win    = winnr()
   sil put!
 
   " LanguageTool somehow gives incorrect line/column numbers when 
@@ -200,13 +209,20 @@ function s:LanguageToolCheck()
 
   let l:languagetool_cmd = 'java'
   \ . ' -jar '  . s:languagetool_jar 
-  \ . ' -l '    . s:languagetool_lang
   \ . ' -c '    . s:languagetool_encoding
   \ . ' -d '    . s:languagetool_disable_rules
+  \ . ' -l '    . s:languagetool_lang
   \ . ' --api ' . l:tmpfilename
 
   exe '%!' . l:languagetool_cmd
   call delete(l:tmpfilename)
+
+  if v:shell_error
+    echoerr 'Command [' . l:languagetool_cmd . '] failed with error: '
+    \      . v:shell_error
+    call s:LanguageToolClear()
+    return -1
+  endif
 
   " Loop on all errors in XML output of LanguageTool and
   " collect information about all errors in list s:errors
@@ -264,8 +280,6 @@ function s:LanguageToolCheck()
     endfor
     exe "norm z" . s:languagetool_win_height . "\<CR>"
     0
-    let s:languagetool_error_buffer = bufnr('%')
-    let s:languagetool_error_win    = winnr()
     map <silent> <buffer> <CR> :call <sid>JumpToCurrentError(0)<CR>
     map <silent> <LeftMouse>   :call <sid>JumpToCurrentError(1)<CR>
     redraw
@@ -288,6 +302,7 @@ function s:LanguageToolCheck()
     \ . substitute(escape(l:re, "\'"), ' ', '\\_\\s', 'g')
     exe "syn match LanguageToolError '" . l:re . "'"
   endfor
+  return 0
 endfunction
 
 " This function clears syntax highlighting created by LanguageTool plugin
@@ -295,7 +310,7 @@ endfunction
 function s:LanguageToolClear()
   if exists('s:languagetool_error_buffer') 
     if bufexists(s:languagetool_error_buffer)
-      exe "bd " . s:languagetool_error_buffer
+      exe "bd! " . s:languagetool_error_buffer
     endif
   endif
   if exists('s:languagetool_text_win') 
