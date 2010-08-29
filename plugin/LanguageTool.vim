@@ -3,26 +3,26 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/30
-" Version:      1.3
-" 
+" Version:      1.4
+"
 " Long Description:
 "
 " This plugin integrates the LanguageTool grammar checker into Vim.
-" Current version of LanguageTool can check grammar in many languages: 
+" Current version of LanguageTool can check grammar in many languages:
 " en, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca, da,
-" ml, be. See http://www.languagetool.org/ for more information about 
+" ml, be. See http://www.languagetool.org/ for more information about
 " LanguageTool.
 "
 " The script defines 2 commands:
 "
 " * Use  :LanguageToolCheck  to check grammar in current buffer.
-"   This will check for grammar mistakes in text of current buffer 
+"   This will check for grammar mistakes in text of current buffer
 "   and highlight the errors.  It also opens a new scratch window with the
 "   list of grammar errors with further explanations for each error.
-"   Pressing <Enter> or click on an error in scratch buffer will jump 
+"   Pressing <Enter> or click on an error in scratch buffer will jump
 "   to that error.  The location list for the buffer being checked
 "   is also populated.  So you can use location commands such as
-"   :lopen to open the location list window, :lne to jump to the 
+"   :lopen to open the location list window, :lne to jump to the
 "   next error, etc.
 "
 " * Use  :LanguageToolClear  to remove highlighting of grammar mistakes,
@@ -33,10 +33,10 @@
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 "
-" You can customize this plugin by setting the following variables in 
+" You can customize this plugin by setting the following variables in
 " your ~/.vimrc (plugin sets some default values).
 "
-"   g:languagetool_jar  
+"   g:languagetool_jar
 "       This variable specifies the location of the LanguageTool java
 "       grammar checker program.
 "       Default is: $HOME/JLanguageTool/dist/LanguageTool.jar
@@ -47,8 +47,8 @@
 "       Default is: WHITESPACE_RULE,EN_QUOTES
 "
 "   g:languagetool_win_height
-"       This variable specifies the height of the scratch window which 
-"       contains all grammatical mistakes with some explanations. You 
+"       This variable specifies the height of the scratch window which
+"       contains all grammatical mistakes with some explanations. You
 "       can use a negative value to disable opening the scratch window.
 "       Default is: 14
 "
@@ -66,12 +66,12 @@
 " requires the mouse to be enabled. You can enable the mouse with
 " with 'set mouse=a' in your ~/.vimrc.
 "
-" Bugs: 
+" Bugs:
 "
 " * Column number reported by LanguageTool indicating the location of the
 "   error is sometimes incorrect. There is an opened ticket about this bug:
 "   http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
-"   The script currently works around it by doing patten matching with 
+"   The script currently works around it by doing patten matching with
 "   information context but it's not a perfect workaround: it can cause
 "   spurious highlighting of errors in rare cases.
 "
@@ -132,7 +132,7 @@ function s:LanguageToolSetUp()
 
   " Only pick the first 2 letters of spelllang, so "en_us" for example
   " is transformed into "en".
-  let s:languagetool_lang = (&spelllang)[:1]
+  let s:languagetool_lang = (&spelllang == '') ? 'en' : (&spelllang)[:1]
   if !filereadable(s:languagetool_jar)
     echomsg "LanguageTool cannot be found at: " . s:languagetool_jar
     echomsg "You need to install LanguageTool and/or set up g:languagetool_jar"
@@ -178,12 +178,11 @@ function <sid>JumpToCurrentError(mouse)
     let l:re = '\V' . substitute(escape(l:context, "\'"), ' ', '\\_\\s', 'g')
 
     echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
-    \ . ' (' . l:rule . ') ...' . l:context . '... @ ' 
+    \ . ' (' . l:rule . ') ...' . l:context . '... @ '
     \ . l:line . 'L ' . l:col . 'C'
     call search(l:re)
     norm zz
   else
-    echo "No error under cursor"
     call setpos('.', l:save_cursor)
   endif
 endfunction
@@ -204,20 +203,20 @@ function s:LanguageToolCheck()
   let s:languagetool_error_win    = winnr()
   sil put!
 
-  " LanguageTool somehow gives incorrect line/column numbers when 
-  " reading from stdin so we need to use a temporary file to get 
+  " LanguageTool somehow gives incorrect line/column numbers when
+  " reading from stdin so we need to use a temporary file to get
   " correct results.
   let l:tmpfilename = tempname()
   silent exe "w!" . l:tmpfilename
 
   let l:languagetool_cmd = 'java'
-  \ . ' -jar '  . s:languagetool_jar 
+  \ . ' -jar '  . s:languagetool_jar
   \ . ' -c '    . s:languagetool_encoding
   \ . ' -d '    . s:languagetool_disable_rules
   \ . ' -l '    . s:languagetool_lang
   \ . ' --api ' . l:tmpfilename
 
-  exe '%!' . l:languagetool_cmd
+  sil exe '%!' . l:languagetool_cmd
   call delete(l:tmpfilename)
 
   if v:shell_error
@@ -232,10 +231,12 @@ function s:LanguageToolCheck()
   let s:errors = []
   while search('^<error ', 'eW') > 0
     let l:l  = getline('.')
+    " The fromx and tox given by LanguageTool are not reliable.
+    " They are even sometimes negative!
     let l:l1 = matchlist(l,  'fromy=\"\(\d\+\)\" '
-    \ .                      'fromx=\"\(\d\+\)\" '
+    \ .                      'fromx=\"\(-\?\d\+\)\" '
     \ .                        'toy=\"\(\d\+\)\" '
-    \ .                        'tox=\"\(\d\+\)\" ')
+    \ .                        'tox=\"\(-\?\d\+\)\" ')
     let l:l2 = matchlist(l, 'ruleId=\"\(\w\+\)\" '
     \ .                        'msg=\"\(.*\)\" '
     \ .               'replacements=\"\(.*\)\" '
@@ -245,10 +246,17 @@ function s:LanguageToolCheck()
     let l:error = l:l1[1:4] + l:l2[1:6]
 
     " Make line/column number start at 1 rather than 0.
-    let l:error[0] += 1  
-    let l:error[1] += 1  
+    let l:error[0] += 1
+    let l:error[1] += 1
     let l:error[2] += 1
     let l:error[3] += 1
+
+    let l:error[7] = substitute(l:error[7], '&quote;', '"', 'g')
+    let l:error[7] = substitute(l:error[7], '&apos;',  "'", 'g')
+    let l:error[7] = substitute(l:error[7], '&amp;',   '&', 'g')
+    let l:error[7] = substitute(l:error[7], '&gt;',    '>', 'g')
+    let l:error[7] = substitute(l:error[7], '&lt;',    '<', 'g')
+
     call add(s:errors, l:error)
   endwhile
 
@@ -265,7 +273,7 @@ function s:LanguageToolCheck()
     syn match LanguageToolErrorCount '^Error:\s\+\d\+.\d\+'
     let l:i = 0
     for l:error in s:errors
-      call append('$', 'Error:      ' 
+      call append('$', 'Error:      '
       \ . (l:i + 1) . '/' . len(s:errors)
       \ . ' ('  . l:error[4] . ')'
       \ . ' @ ' . l:error[0] . 'L '
@@ -286,7 +294,7 @@ function s:LanguageToolCheck()
     map <silent> <buffer> <CR> :call <sid>JumpToCurrentError(0)<CR>
     map <silent> <LeftMouse>   :call <sid>JumpToCurrentError(1)<CR>
     redraw
-    echo 'Press <Enter> or click on an error in scratch buffer '
+    echo 'Press <Enter> or click on error in scratch buffer '
     \ .  'to jump its location'
     exe "norm \<C-W>\<C-P>"
   else
@@ -302,11 +310,11 @@ function s:LanguageToolCheck()
     let l:re = l:error[7][byteidx(l:error[7], l:error[8])
     \                    :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
     " This substitute allows matching when error spans multiple lines.
-    let l:re = '\%' . l:error[0] . 'l\V' 
+    let l:re = '\%' . l:error[0] . 'l\V'
     \ . substitute(escape(l:re, "\'"), ' ', '\\_\\s', 'g')
     exe "syn match LanguageToolError '" . l:re . "'"
-    laddexpr expand('%') . ':' 
-    \ . l:error[0] . ':' . l:error[1] . ':' 
+    laddexpr expand('%') . ':'
+    \ . l:error[0] . ':' . l:error[1] . ':'
     \ . l:error[4] . ' ' . l:error[5]
   endfor
   return 0
@@ -315,12 +323,12 @@ endfunction
 " This function clears syntax highlighting created by LanguageTool plugin
 " and removes the scratch window containing grammatical errors.
 function s:LanguageToolClear()
-  if exists('s:languagetool_error_buffer') 
+  if exists('s:languagetool_error_buffer')
     if bufexists(s:languagetool_error_buffer)
       sil! exe "bd! " . s:languagetool_error_buffer
     endif
   endif
-  if exists('s:languagetool_text_win') 
+  if exists('s:languagetool_text_win')
     let l:win = winnr()
     exe s:languagetool_text_win . 'wincmd w'
     syn clear LanguageToolError
