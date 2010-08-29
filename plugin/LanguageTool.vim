@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/08/29
-" Version:      1.2
+" Last Change:  2010/08/30
+" Version:      1.3
 " 
 " Long Description:
 "
@@ -20,10 +20,14 @@
 "   and highlight the errors.  It also opens a new scratch window with the
 "   list of grammar errors with further explanations for each error.
 "   Pressing <Enter> or click on an error in scratch buffer will jump 
-"   to that error.
+"   to that error.  The location list for the buffer being checked
+"   is also populated.  So you can use location commands such as
+"   :lopen to open the location list window, :lne to jump to the 
+"   next error, etc.
 "
-" * Use  :LanguageToolClear  to remove highlighting of grammar mistakes
-"   and close the scratch window containing the list of errors.
+" * Use  :LanguageToolClear  to remove highlighting of grammar mistakes,
+"   close the scratch window containing the list of errors, clear and
+"   close the location list.
 "
 " See screenshots of grammar checking in English and French at:
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
@@ -74,7 +78,6 @@
 " ToDo:
 "
 " * Help page
-" * Should use location list (not sure yet how this works).
 " * Implement checking of text limited to visual selection
 " * Use balloons to show info about errors (for gvim only)
 "
@@ -293,7 +296,8 @@ function s:LanguageToolCheck()
   endif
   let s:languagetool_text_win = winnr()
 
-  " Also highlight errors in original buffer.
+  " Also highlight errors in original buffer and populate location list.
+  setlocal errorformat=%f:%l:%c:%m
   for l:error in s:errors
     let l:re = l:error[7][byteidx(l:error[7], l:error[8])
     \                    :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
@@ -301,6 +305,9 @@ function s:LanguageToolCheck()
     let l:re = '\%' . l:error[0] . 'l\V' 
     \ . substitute(escape(l:re, "\'"), ' ', '\\_\\s', 'g')
     exe "syn match LanguageToolError '" . l:re . "'"
+    laddexpr expand('%') . ':' 
+    \ . l:error[0] . ':' . l:error[1] . ':' 
+    \ . l:error[4] . ' ' . l:error[5]
   endfor
   return 0
 endfunction
@@ -310,13 +317,15 @@ endfunction
 function s:LanguageToolClear()
   if exists('s:languagetool_error_buffer') 
     if bufexists(s:languagetool_error_buffer)
-      exe "bd! " . s:languagetool_error_buffer
+      sil! exe "bd! " . s:languagetool_error_buffer
     endif
   endif
   if exists('s:languagetool_text_win') 
     let l:win = winnr()
     exe s:languagetool_text_win . 'wincmd w'
     syn clear LanguageToolError
+    lexpr ''
+    lclose
     exe l:win . 'wincmd w'
   endif
   unlet! s:languagetool_error_buffer
