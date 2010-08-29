@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/29
-" Version:      1.0
+" Version:      1.1
 " 
 " Long Description:
 "
@@ -19,8 +19,8 @@
 "   This will check for grammar mistakes in text of current buffer 
 "   and highlight the errors.  It also opens a new scratch window with the
 "   list of grammar errors with further explanations for each error.
-"   Pressing <Enter> on an error in scratch buffer will jump to that
-"   error.
+"   Pressing <Enter> or click on an error in scratch buffer will jump 
+"   to that error.
 "
 " * Use  :LanguageToolClear  to remove highlighting of grammar mistakes
 "   and close the scratch window containing the list of errors.
@@ -54,8 +54,13 @@
 "   LanguageToolLabel
 "   LanguageToolErrorCount
 "
-" Language is selected automatically from the Vim 'spelllang' option.
-" Character encoding is selected automatically from the Vim 'fenc' option.
+" Language is selected automatically from the 'spelllang' option.
+" Character encoding is selected automatically from the 'fenc' option
+" or from 'enc' option if 'fenc' is empty.
+"
+" Being able to click on errors in scratch buffer to jump to error
+" requires the mouse to be enabled. You can enable the mouse with
+" with 'set mouse=a' in your ~/.vimrc.
 "
 " Bugs: 
 "
@@ -71,7 +76,6 @@
 " * Help page
 " * Should use location list (not sure yet how this works).
 " * Implement checking of text limited to visual selection
-" * Handle mouse click (clicking on error to jump to it)
 " * Use balloons to show info about errors (for gvim only)
 "
 " Install Details:
@@ -120,7 +124,7 @@ function s:LanguageToolSetUp()
   let s:languagetool_win_height = exists("g:languagetool_win_height")
   \ ? g:languagetool_win_height
   \ : 14
-  let s:languagetool_encoding = &fenc
+  let s:languagetool_encoding = &fenc ? &fenc : &enc
 
   " Only pick the first 2 letters of spelllang, so "en_us" for example
   " is transformed into "en".
@@ -132,9 +136,18 @@ function s:LanguageToolSetUp()
   endif
 endfunction
 
-" Jump to a grammar mistake (called when pressing <Enter> on a particular
-" error in scratch buffer.
-function <sid>JumpToCurrentError()
+" Jump to a grammar mistake (called when pressing <Enter> or clicking
+" on a particular error in scratch buffer).
+function <sid>JumpToCurrentError(mouse)
+  if a:mouse
+    call feedkeys("\<LeftMouse>")
+    let l:c = getchar()
+    if l:c == "\<LeftMouse>" && v:mouse_win == s:languagetool_error_win
+      exe v:mouse_win . 'wincmd w'
+      exe v:mouse_lnum
+      exe 'norm ' . v:mouse_col . '|'
+    endif
+  endif
   let l:save_cursor = getpos('.')
   norm $
   if search('^Error:\s\+', 'beW') > 0
@@ -237,7 +250,7 @@ function s:LanguageToolCheck()
       \ . (l:i + 1) . '/' . len(s:errors)
       \ . ' ('  . l:error[4] . ')'
       \ . ' @ ' . l:error[0] . 'L '
-      \ .         l:error[1] . 'C ')
+      \ .         l:error[1] . 'C')
       call append('$', 'Message:    ' . l:error[5])
       call append('$', 'Context:    ' . l:error[7])
 
@@ -252,9 +265,12 @@ function s:LanguageToolCheck()
     exe "norm z" . s:languagetool_win_height . "\<CR>"
     0
     let s:languagetool_error_buffer = bufnr('%')
-    map <silent> <buffer> <CR> :call <sid>JumpToCurrentError()<CR>
+    let s:languagetool_error_win    = winnr()
+    map <silent> <buffer> <CR> :call <sid>JumpToCurrentError(0)<CR>
+    map <silent> <LeftMouse>   :call <sid>JumpToCurrentError(1)<CR>
     redraw
-    echo 'Press <Enter> on an error in scratch buffer to jump its location'
+    echo 'Press <Enter> or click on an error in scratch buffer '
+    \ .  'to jump its location'
     exe "norm \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
@@ -281,15 +297,17 @@ function s:LanguageToolClear()
     if bufexists(s:languagetool_error_buffer)
       exe "bd " . s:languagetool_error_buffer
     endif
-    unlet s:languagetool_error_buffer
   endif
   if exists('s:languagetool_text_win') 
     let l:win = winnr()
     exe s:languagetool_text_win . 'wincmd w'
     syn clear LanguageToolError
     exe l:win . 'wincmd w'
-    unlet! s:languagetool_text_win
   endif
+  unlet! s:languagetool_error_buffer
+  unlet! s:languagetool_error_win
+  unlet! s:languagetool_text_win
+  exe "sil! unmap <LeftMouse>"
 endfunction
 
 hi def link LanguageToolCmd        Comment
