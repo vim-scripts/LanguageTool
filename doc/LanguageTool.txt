@@ -162,7 +162,7 @@ You can also customize the following syntax highlighting groups: >
 
 ============================================================================
 
-6. Features                                           *languatetool-features*
+6. Features                                           *languagetool-features*
 
 The LanguageTool plugin defines 2 commands |:LanguageToolCheck| and
 |:LanguageToolClean|.
@@ -181,7 +181,7 @@ The default range is 1,$ (whole buffer).
 
 :LanguageToolClear                                       *:LanguageToolClear*
 
-Use the |:LanguateToolClear| command to clear highlighting of grammar
+Use the |:LanguageToolClear| command to clear highlighting of grammar
 mistakes, close the scratch window containing the list of errors, clear
 and close the location-list.
 
@@ -199,7 +199,7 @@ window, |:lne| to jump to the next error, etc.
 The error scratch window may seem redundant with the location-list, but the
 scratch window is more flexible to present errors in a nice way.  If you do
 not wish to popup the error scratch window, but use the location-list only,
-you can disable it by setting |g:languagetool_win_heigh| to a negative value.
+you can disable it by setting |g:languagetool_win_height| to a negative value.
 
 ============================================================================
 

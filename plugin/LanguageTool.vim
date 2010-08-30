@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/30
-" Version:      1.7
+" Version:      1.8
 "
 " Long Description:
 "
@@ -116,14 +116,14 @@ function s:LanguageToolSetUp()
       echomsg "You need to install LanguageTool and/or set up g:languagetool_jar"
       return -1
     endif
-    s:languagetool_jar = l:languagetool_jar
+    let s:languagetool_jar = l:languagetool_jar
   endif
   return 0
 endfunction
 
 " Jump to a grammar mistake (called when pressing <Enter> or clicking
-" on a particular error in scratch buffer.
-" mouse parameter is 1 if called from a mouse event, 0 otherwise.
+" on a particular error in scratch buffer).
+" a:mouse parameter is 1 if called from a mouse event, 0 otherwise.
 function <sid>JumpToCurrentError(mouse)
   if a:mouse
     call feedkeys("\<LeftMouse>")
@@ -169,7 +169,10 @@ endfunction
 
 " This function performs grammar checking of text in the current buffer.
 " It highlights grammar mistakes in current buffer and opens a scratch
-" window with all errors found.
+" window with all errors found.  It also populates the location-list of
+" the window with all errors.
+" a:line1 and a:line2 parameters are the first and last line number of
+" the range of line to check.
 " Returns 0 if success, < 0 in case of error.
 function s:LanguageToolCheck(line1, line2)
   let l:save_cursor = getpos('.')
@@ -283,7 +286,7 @@ function s:LanguageToolCheck(line1, line2)
       exe "syn match LanguageToolError '"
       \ . '\%'  . line('$') . 'l\%9c'
       \ . '.\{' . (4 + l:error[8]) . '}\zs'
-      \ . '.\{' . (l:error[9]) . "}'"
+      \ . '.\{' .     (l:error[9]) . "}'"
       call append('$', 'Correction: ' . l:error[6])
       call append('$', '')
       let l:i += 1
@@ -320,7 +323,7 @@ function s:LanguageToolCheck(line1, line2)
 endfunction
 
 " This function clears syntax highlighting created by LanguageTool plugin
-" and removes the scratch window containing grammatical errors.
+" and removes the scratch window containing grammar errors.
 function s:LanguageToolClear()
   if exists('s:languagetool_error_buffer')
     if bufexists(s:languagetool_error_buffer)
@@ -346,6 +349,6 @@ hi def link LanguageToolLabel      Label
 hi def link LanguageToolError      Error
 hi def link LanguageToolErrorCount Title
 
+com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
 com! -nargs=0 -range=% LanguageToolCheck :call s:LanguageToolCheck(<line1>,
                                                                  \ <line2>)
-com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
