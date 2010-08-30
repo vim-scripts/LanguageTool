@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/30
-" Version:      1.4
+" Version:      1.5
 "
 " Long Description:
 "
@@ -86,27 +86,33 @@
 " Copy this plugin script LanguageTool.vim in $HOME/.vim/plugin/.
 "
 " You also need to install the Java LanguageTool program in order to use
-" this plugin.  On Ubuntu, you need to install the ant, sun-java6-jdk, and cvs
-" packages:
+" this plugin.  There are 2 possibilities:
 "
-" $ sudo apt-get install sun-java6-jdk ant cvs
+" 1/ Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt
+"    from http://www.languagetool.org/
+"    Unzip it. This should extract LanguageTool.jar among several other files
 "
-" LanguageTool can then be downloaded and built as follows:
+"    You then need to set up g:languagetool_jar in your ~/.vimrc with
+"    the location of this LanguageTool.jar file.  For example:
 "
-" $ cvs -z3 \
-" -d:pserver:anonymous@languagetool.cvs.sourceforge.net:/cvsroot/languagetool \
-" co -P JLanguageTool
-" $ cd JLanguageTool
-" $ ant
+"    let g:languagetool_jar=$HOME . '/JLanguageTool/LanguageTool.jar'
 "
-" This should build JLanguageTool/dist/LanguageTool.jar.
+" 2/ Alternatively, download the latest LanguageTool from CVS and
+"    build it.  This ensures that you get the latest version.  On Ubuntu,
+"    you need to install the ant, sun-java6-jdk and cvs packages as a
+"    prerequisite:
 "
-" Downloading LanguageTool from CVS ensures you get the latest version.
-" Alternatively, rather than building LanguageTool.jar from CVS, you
-" can download the openoffice extension oxt and unzip it.
+"    $ sudo apt-get install sun-java6-jdk ant cvs
 "
-" You then need to set up g:languagetool_jar in your ~/.vimrc with
-" the location of the LanguageTool.jar file.
+"    LanguageTool can then be downloaded and built as follows:
+"
+"    $ cvs -z3 \
+"    -d:pserver:anonymous@languagetool.cvs.sourceforge.net:/cvsroot/languagetool \
+"    co -P JLanguageTool
+"    $ cd JLanguageTool
+"    $ ant
+"
+"    This should build JLanguageTool/dist/LanguageTool.jar.
 "
 " License: The VIM LICENSE applies to LanguageTool.vim plugin
 " (see ":help copyright" except use "LanguageTool.vim" instead of "Vim").
@@ -142,7 +148,7 @@ function s:LanguageToolSetUp()
 endfunction
 
 " Jump to a grammar mistake (called when pressing <Enter> or clicking
-" on a particular error in scratch buffer).
+" on a particular error in scratch buffer.
 " mouse parameter is 1 if called from a mouse event, 0 otherwise.
 function <sid>JumpToCurrentError(mouse)
   if a:mouse
@@ -175,7 +181,7 @@ function <sid>JumpToCurrentError(mouse)
     \                         :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
 
     " This substitute allows matching when error spans multiple lines.
-    let l:re = '\V' . substitute(escape(l:context, "\'"), ' ', '\\_\\s', 'g')
+    let l:re = '\V' . substitute(escape(l:context, "'\\"), ' ', '\\_\\s', 'g')
 
     echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
     \ . ' (' . l:rule . ') ...' . l:context . '... @ '
@@ -251,12 +257,24 @@ function s:LanguageToolCheck()
     let l:error[2] += 1
     let l:error[3] += 1
 
-    let l:error[7] = substitute(l:error[7], '&quote;', '"', 'g')
-    let l:error[7] = substitute(l:error[7], '&apos;',  "'", 'g')
-    let l:error[7] = substitute(l:error[7], '&amp;',   '&', 'g')
-    let l:error[7] = substitute(l:error[7], '&gt;',    '>', 'g')
-    let l:error[7] = substitute(l:error[7], '&lt;',    '<', 'g')
-
+    " We need to change XML escape char such as &quot; into " and
+    " update the contextoffset accordingly.  
+    for l:e in [['&quot;', '"'],
+    \           ['&aqos;', "'"],
+    \           ['&amp',   '&'],
+    \           ['&gt;',   '>'],
+    \           ['&lt',    '<']]
+      while 1
+        let l:idx = stridx(l:error[7], l:e[0])
+        if l:idx < 0
+          break
+        endif
+        let l:error[7] = substitute(l:error[7], l:e[0], l[1], '')
+        if l:error[8] > l:idx
+          let l:error[8] -= len(l:e[0]) - len(l:e[1])
+        endif
+      endwhile
+    endfor
     call add(s:errors, l:error)
   endwhile
 
@@ -311,7 +329,7 @@ function s:LanguageToolCheck()
     \                    :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
     " This substitute allows matching when error spans multiple lines.
     let l:re = '\%' . l:error[0] . 'l\V'
-    \ . substitute(escape(l:re, "\'"), ' ', '\\_\\s', 'g')
+    \ . substitute(escape(l:re, "'\\"), ' ', '\\_\\s', 'g')
     exe "syn match LanguageToolError '" . l:re . "'"
     laddexpr expand('%') . ':'
     \ . l:error[0] . ':' . l:error[1] . ':'
