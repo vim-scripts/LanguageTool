@@ -1,9 +1,9 @@
-" LanguageTool: Grammar checker for Vim using LanguageTool.
+" LanguageTool: Grammar checker in Vim for English, French, German, etc.
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/30
-" Version:      1.5
+" Version:      1.6
 "
 " Long Description:
 "
@@ -17,11 +17,11 @@
 "
 " * Use  :LanguageToolCheck  to check grammar in current buffer.
 "   This will check for grammar mistakes in text of current buffer
-"   and highlight the errors.  It also opens a new scratch window with the
+"   and highlight the errors. It also opens a new scratch window with the
 "   list of grammar errors with further explanations for each error.
-"   Pressing <Enter> or click on an error in scratch buffer will jump
-"   to that error.  The location list for the buffer being checked
-"   is also populated.  So you can use location commands such as
+"   Pressing <Enter> or clicking on an error in scratch buffer will jump
+"   to that error. The location list for the buffer being checked
+"   is also populated. So you can use location commands such as
 "   :lopen to open the location list window, :lne to jump to the
 "   next error, etc.
 "
@@ -33,72 +33,32 @@
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 "
-" You can customize this plugin by setting the following variables in
-" your ~/.vimrc (plugin sets some default values).
-"
-"   g:languagetool_jar
-"       This variable specifies the location of the LanguageTool java
-"       grammar checker program.
-"       Default is: $HOME/JLanguageTool/dist/LanguageTool.jar
-"
-"   g:languagetool_disable_rules
-"       This variable specifies checker rules which are disabled.
-"       Each disabled rule must be comma separated
-"       Default is: WHITESPACE_RULE,EN_QUOTES
-"
-"   g:languagetool_win_height
-"       This variable specifies the height of the scratch window which
-"       contains all grammatical mistakes with some explanations. You
-"       can use a negative value to disable opening the scratch window.
-"       Default is: 14
-"
-" You can also customize the following syntax highlighting groups:
-"   LanguageToolError
-"   LanguageToolCmd
-"   LanguageToolLabel
-"   LanguageToolErrorCount
-"
-" Language is selected automatically from the 'spelllang' option.
-" Character encoding is selected automatically from the 'fenc' option
-" or from 'enc' option if 'fenc' is empty.
-"
-" Being able to click on errors in scratch buffer to jump to error
-" requires the mouse to be enabled. You can enable the mouse with
-" with 'set mouse=a' in your ~/.vimrc.
-"
-" Bugs:
-"
-" * Column number reported by LanguageTool indicating the location of the
-"   error is sometimes incorrect. There is an opened ticket about this bug:
-"   http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
-"   The script currently works around it by doing patten matching with
-"   information context but it's not a perfect workaround: it can cause
-"   spurious highlighting of errors in rare cases.
+" See  :help LanguageTool  for more details
 "
 " ToDo:
 "
-" * Help page
+" * Use autoload
 " * Implement checking of text limited to visual selection
 " * Use balloons to show info about errors (for gvim only)
 "
 " Install Details:
 "
-" Copy this plugin script LanguageTool.vim in $HOME/.vim/plugin/.
+" Install the plugin with:
+"
+"   $ mkdir ~/.vim
+"   $ cd ~/.vim
+"   $ unzip /path-to/LanguageTool.zip
+"   $ vim -c 'helptags ~/.vim/doc'
 "
 " You also need to install the Java LanguageTool program in order to use
-" this plugin.  There are 2 possibilities:
+" this plugin. There are 2 possibilities:
 "
 " 1/ Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt
 "    from http://www.languagetool.org/
 "    Unzip it. This should extract LanguageTool.jar among several other files
 "
-"    You then need to set up g:languagetool_jar in your ~/.vimrc with
-"    the location of this LanguageTool.jar file.  For example:
-"
-"    let g:languagetool_jar=$HOME . '/JLanguageTool/LanguageTool.jar'
-"
-" 2/ Alternatively, download the latest LanguageTool from CVS and
-"    build it.  This ensures that you get the latest version.  On Ubuntu,
+" 2/ Alternatively, download the latest LanguageTool from CVS and build it.
+"    This ensures that you get the latest version. On Ubuntu,
 "    you need to install the ant, sun-java6-jdk and cvs packages as a
 "    prerequisite:
 "
@@ -113,6 +73,11 @@
 "    $ ant
 "
 "    This should build JLanguageTool/dist/LanguageTool.jar.
+"
+" You then need to set up g:languagetool_jar in your ~/.vimrc with
+" the location of this LanguageTool.jar file. For example:
+"
+"   let g:languagetool_jar=$HOME . '/JLanguageTool/LanguageTool.jar'
 "
 " License: The VIM LICENSE applies to LanguageTool.vim plugin
 " (see ":help copyright" except use "LanguageTool.vim" instead of "Vim").
@@ -258,7 +223,7 @@ function s:LanguageToolCheck()
     let l:error[3] += 1
 
     " We need to change XML escape char such as &quot; into " and
-    " update the contextoffset accordingly.  
+    " update the contextoffset accordingly.
     for l:e in [['&quot;', '"'],
     \           ['&aqos;', "'"],
     \           ['&amp',   '&'],

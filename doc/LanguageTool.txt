@@ -1,0 +1,221 @@
+*LanguageTool.txt*  A grammar checker in Vim for English, French, German, etc.
+*LanguageTool*
+
+Author:      Dominique Pellé <dominique.pelle@gmail.com>
+Last Change: 30 Aug 2010
+
+For Vim version 7.0 and above
+
+============================================================================
+
+1.  Overview                                      |languagetool-overview|
+2.  Screenshots                                   |languagetool-screenshots|
+3.  Download                                      |languagetool-download|
+4.  Installation                                  |languagetool-installation|
+5.  Configuration                                 |languagetool-configuration|
+6.  Features                                      |languagetool-features|
+7.  Bugs                                          |languagetool-bugs|
+8.  License                                       |languagetool-license|
+
+============================================================================
+
+1. Overview                                           *languagetool-overview*
+
+This plugin integrates LanguageTool into Vim. LanguageTool is an Open Source
+style and grammar checker for English, French, German, Polish, Dutch,
+Romanian and many other languages. LanguageTool detects grammar mistakes
+that a spelling checker cannot detect. LanguageTool does not do spelling
+checking. Vim builtin spelling checker can of course be used along with
+LanguageTool.
+
+See http://www.languagetool.org/ for more information about LanguageTool.
+
+============================================================================
+2. Screenshots                                     *languagetool-screenshots*
+
+If you don't have time to read help files, these screenshots will give you
+an idea of what the LanguageTool plugin does:
+
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
+
+============================================================================
+3. Download                                           *languagetool-download*
+
+You can download the latest version of this plugin from:
+
+  http://www.vim.org/scripts/script.php?script_id=3223
+
+LanguageTool can be downloaded from:
+
+  http://www.languagetool.org/
+
+============================================================================
+4. Installation                                   *languagetool-installation*
+
+4.1 Installing the plugin~
+
+Unzip file LanguageTool.zip in your personal |vimfiles| directory (~/.vim
+under Unix or %HOMEPATH%\vimfiles under Windows): >
+
+  $ mkdir ~/.vim
+  $ cd ~/.vim
+  $ unzip /path-to/LanguageTool.zip
+  $ vim -c 'helptags ~/.vim/doc'
+
+The zip file contains files: >
+
+   plugin/LanguageTool.vim
+   doc/LanguageTool.vim
+
+You have to enable plugins by adding these two lines in your |.vimrc| file: >
+
+  set nocompatible
+  filetype plugin on
+
+4.2 Installing LanguageTool~
+
+To use this plugin, you need to install the Java LanguageTool program. You
+can choose to:
+
+* download the LanguageTool plugin for OpenOffice;
+* or checkout and build the latest LanguageTool from sources in CVS.
+
+Downloading the OpenOffice plugin is simpler, but building LanguageTool
+from sources ensures that you get the latest version.
+
+4.2.1 Download LanguageTool plugin for OpenOffice~
+
+Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt and
+unzip it: >
+
+  $ wget http://www.languagetool.org/download/LanguageTool-1.0.0.oxt
+  $ unzip LanguageTool-1.0.0.oxt
+
+This should extract LanguageTool.jar among several other files.
+
+You may find more recent development snapshots at:
+
+  http://www.languagetool.org/download/
+
+4.2.2 Build LanguageTool from sources iN CVS~
+
+If you prefer to build LanguageTool yourself from sources, you first need
+to install the pre-requisite packages. On Ubuntu, you need to install the
+following packages: >
+
+  $ sudo apt-get install sun-java6-jdk ant cvs
+
+LanguageTool can then be downloaded and built as follows: >
+
+  $ cvs -z3 \
+  -d:pserver:anonymous@languagetool.cvs.sourceforge.net:/cvsroot/languagetool \
+  co -P JLanguageTool
+  $ cd JLanguageTool
+  $ ant
+
+This should build JLanguageTool/dist/LanguageTool.jar.
+
+============================================================================
+5. Configuration                                 *languagetool-configuration*
+
+LanguageTool plugin uses character encoding from the 'fenc' option or from
+the 'enc' option if 'fenc' is empty.
+
+The language used for grammar checking is automatically selected from the
+'spelllang' Vim option. If 'spelllang' option is empty, English (en) is
+used by default.
+
+Several global variables can be set in your |vimrc| to configure the behavior
+of the LanguageTool plugin.
+
+g:languagetool_jar                                       *g:languagetool_jar*
+
+  This variable specifies the location of the LanguageTool java grammar
+  checker program.
+  Default is: $HOME/JLanguageTool/dist/LanguageTool.jar
+
+g:languagetool_disable_rules                   *g:languagetool_disable_rules*
+
+  This variable specifies checker rules which are disabled. Each disabled
+  rule must be comma separated.
+  Default is: WHITESPACE_RULE,EN_QUOTES
+
+g:languagetool_win_height                         *g:languagetool_win_height*
+
+  This variable specifies the height of the scratch window which contains
+  all grammatical mistakes with some explanations. You can use a negative
+  value to disable opening the scratch window. You can also make it empty ''
+  to let Vim pick a default size.
+  Default is: 14
+
+You can also customize the following syntax highlighting groups: >
+
+  LanguageToolError
+  LanguageToolCmd
+  LanguageToolLabel
+  LanguageToolErrorCount
+
+============================================================================
+6. Features                                           *languatetool-features*
+
+The LanguageTool plugin defines 2 commands |:LanguageToolCheck| and
+|:LanguageToolClean|.
+
+:LanguageToolCheck                                       *:LanguageToolCheck*
+
+Use the |:LanguageToolCheck| command to check the grammar in the current
+buffer. This will highlight errors in the buffer. It will also open a new
+scratch window with the list of grammar mistakes with further explanations
+for each error.  It also populates the location-list for the window.
+
+:LanguageToolClear                                       *:LanguageToolClear*
+
+Use the |:LanguateToolClear| command to clear highlighting of grammar
+mistakes, close the scratch window containing the list of errors, clear
+and close the location-list.
+
+Using the error scratch window~
+
+Pressing <Enter> or clicking on an error in the error scratch buffer will
+jump to that error.
+
+Using the Location-list~
+
+The |location-list| is populated when running |:LanguageToolCheck|. So you can
+use location-list Vim commands such as |:lopen| to open the location-list
+window, |:lne| to jump to the next error, etc.
+
+The error scratch window may seem redundant with the location-list, but the
+scratch window is more flexible to present errors in a nice way.  If you do
+not wish to popup the error scratch window, but use the location-list only,
+you can disable it by setting |g:languagetool_win_heigh| to a negative value.
+
+============================================================================
+7. Bugs                                                   *languagetool-bugs*
+
+Column number reported by LanguageTool indicating the location of the error
+is sometimes incorrect. There is an opened ticket about this bug:
+
+  http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
+
+The script currently works around it by doing patten matching with
+information context but it's not a perfect workaround: it can cause
+spurious highlighting of errors in rare cases.
+
+Please report bugs or suggestions to <dominique.pelle@gmail.com>.
+Alternatively, you can also discuss improvements to this plugin in Wiki
+by clicking on the "Vim wiki" link at the top of the script page:
+
+  http://www.vim.org/scripts/script.php?script_id=3223
+
+============================================================================
+8. License                                             *languagetool-license*
+
+The VIM LICENSE applies to the LanguageTool.vim plugin (see |copyright|
+except use "LanguageTool.vim" instead of "Vim").
+
+LanguageTool is freely available under LGPL.
+
+============================================================================
+vim:tw=78:fo=tcq2:isk=!-~,^*,^\|,^\":ts=8:ft=help:norl:
