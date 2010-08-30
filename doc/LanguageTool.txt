@@ -31,6 +31,7 @@ LanguageTool.
 See http://www.languagetool.org/ for more information about LanguageTool.
 
 ============================================================================
+
 2. Screenshots                                     *languagetool-screenshots*
 
 If you don't have time to read help files, these screenshots will give you
@@ -40,6 +41,7 @@ an idea of what the LanguageTool plugin does:
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 
 ============================================================================
+
 3. Download                                           *languagetool-download*
 
 You can download the latest version of this plugin from:
@@ -51,6 +53,7 @@ LanguageTool can be downloaded from:
   http://www.languagetool.org/
 
 ============================================================================
+
 4. Installation                                   *languagetool-installation*
 
 4.1 Installing the plugin~
@@ -117,6 +120,7 @@ LanguageTool can then be downloaded and built as follows: >
 This should build JLanguageTool/dist/LanguageTool.jar.
 
 ============================================================================
+
 5. Configuration                                 *languagetool-configuration*
 
 LanguageTool plugin uses character encoding from the 'fenc' option or from
@@ -157,6 +161,7 @@ You can also customize the following syntax highlighting groups: >
   LanguageToolErrorCount
 
 ============================================================================
+
 6. Features                                           *languatetool-features*
 
 The LanguageTool plugin defines 2 commands |:LanguageToolCheck| and
@@ -168,6 +173,11 @@ Use the |:LanguageToolCheck| command to check the grammar in the current
 buffer. This will highlight errors in the buffer. It will also open a new
 scratch window with the list of grammar mistakes with further explanations
 for each error.  It also populates the location-list for the window.
+
+The |:LanguageToolCheck| command accepts a range. You can for example check
+grammar between lines 100 and 200 in buffer with :100,200LanguageToolCheck,
+check grammar in the visual selection with :<',>'LanguageToolCheck, etc.
+The default range is 1,$ (whole buffer).
 
 :LanguageToolClear                                       *:LanguageToolClear*
 
@@ -192,10 +202,11 @@ not wish to popup the error scratch window, but use the location-list only,
 you can disable it by setting |g:languagetool_win_heigh| to a negative value.
 
 ============================================================================
+
 7. Bugs                                                   *languagetool-bugs*
 
 Column number reported by LanguageTool indicating the location of the error
-is sometimes incorrect. There is an opened ticket about this bug:
+is sometimes incorrect. There is already an opened ticket about this bug:
 
   http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
 
@@ -210,6 +221,7 @@ by clicking on the "Vim wiki" link at the top of the script page:
   http://www.vim.org/scripts/script.php?script_id=3223
 
 ============================================================================
+
 8. License                                             *languagetool-license*
 
 The VIM LICENSE applies to the LanguageTool.vim plugin (see |copyright|

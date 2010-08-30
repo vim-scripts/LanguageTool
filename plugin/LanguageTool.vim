@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2010/08/30
-" Version:      1.6
+" Version:      1.7
 "
 " Long Description:
 "
@@ -38,7 +38,6 @@
 " ToDo:
 "
 " * Use autoload
-" * Implement checking of text limited to visual selection
 " * Use balloons to show info about errors (for gvim only)
 "
 " Install Details:
@@ -79,7 +78,9 @@
 "
 "   let g:languagetool_jar=$HOME . '/JLanguageTool/LanguageTool.jar'
 "
-" License: The VIM LICENSE applies to LanguageTool.vim plugin
+" License:
+"
+" The VIM LICENSE applies to LanguageTool.vim plugin
 " (see ":help copyright" except use "LanguageTool.vim" instead of "Vim").
 "
 if &cp || exists("g:loaded_languagetool")
@@ -90,9 +91,6 @@ let g:loaded_languagetool = "1"
 " Set up configuration.
 " Returns 0 if success, < 0 in case of error.
 function s:LanguageToolSetUp()
-  let s:languagetool_jar = exists("g:languagetool_jar")
-  \ ? g:languagetool_jar
-  \ : $HOME . '/JLanguageTool/dist/LanguageTool.jar'
   let s:languagetool_disable_rules = exists("g:languagetool_disable_rules")
   \ ? g:languagetool_disable_rules
   \ : 'WHITESPACE_RULE,EN_QUOTES'
@@ -104,10 +102,21 @@ function s:LanguageToolSetUp()
   " Only pick the first 2 letters of spelllang, so "en_us" for example
   " is transformed into "en".
   let s:languagetool_lang = (&spelllang == '') ? 'en' : (&spelllang)[:1]
+
+  let s:languagetool_jar = exists("g:languagetool_jar")
+  \ ? g:languagetool_jar
+  \ : $HOME . '/JLanguageTool/dist/LanguageTool.jar'
+
   if !filereadable(s:languagetool_jar)
-    echomsg "LanguageTool cannot be found at: " . s:languagetool_jar
-    echomsg "You need to install LanguageTool and/or set up g:languagetool_jar"
-    return -1
+    " Hmmm, can't find the jar file.  Try again with expand() in case user
+    " set it up as: let g:languagetool_jar = '$HOME/LanguageTool.jar'
+    let l:languagetool_jar = expand(s:languagetool_jar)
+    if !filereadable(expand(l:languagetool_jar))
+      echomsg "LanguageTool cannot be found at: " . s:languagetool_jar
+      echomsg "You need to install LanguageTool and/or set up g:languagetool_jar"
+      return -1
+    endif
+    s:languagetool_jar = l:languagetool_jar
   endif
   return 0
 endfunction
@@ -162,12 +171,13 @@ endfunction
 " It highlights grammar mistakes in current buffer and opens a scratch
 " window with all errors found.
 " Returns 0 if success, < 0 in case of error.
-function s:LanguageToolCheck()
+function s:LanguageToolCheck(line1, line2)
   let l:save_cursor = getpos('.')
   if s:LanguageToolSetUp() < 0
     return -1
   endif
   call s:LanguageToolClear()
+
   sil %y
   botright new
   let s:languagetool_error_buffer = bufnr('%')
@@ -178,7 +188,9 @@ function s:LanguageToolCheck()
   " reading from stdin so we need to use a temporary file to get
   " correct results.
   let l:tmpfilename = tempname()
-  silent exe "w!" . l:tmpfilename
+
+  let l:range = a:line1 . ',' . a:line2
+  silent exe l:range . 'w!' . l:tmpfilename
 
   let l:languagetool_cmd = 'java'
   \ . ' -jar '  . s:languagetool_jar
@@ -204,37 +216,41 @@ function s:LanguageToolCheck()
     let l:l  = getline('.')
     " The fromx and tox given by LanguageTool are not reliable.
     " They are even sometimes negative!
-    let l:l1 = matchlist(l,  'fromy=\"\(\d\+\)\" '
-    \ .                      'fromx=\"\(-\?\d\+\)\" '
-    \ .                        'toy=\"\(\d\+\)\" '
-    \ .                        'tox=\"\(-\?\d\+\)\" ')
-    let l:l2 = matchlist(l, 'ruleId=\"\(\w\+\)\" '
-    \ .                        'msg=\"\(.*\)\" '
-    \ .               'replacements=\"\(.*\)\" '
-    \ .                    'context=\"\(.*\)\" '
-    \ .              'contextoffset=\"\(\d\+\)\" '
-    \ .                'errorlength=\"\(\d\+\)\"')
+    let l:l1 = matchlist(l:l,  'fromy=\"\(\d\+\)\" '
+    \ .                        'fromx=\"\(-\?\d\+\)\" '
+    \ .                          'toy=\"\(\d\+\)\" '
+    \ .                          'tox=\"\(-\?\d\+\)\" ')
+    let l:l2 = matchlist(l:l, 'ruleId=\"\(\w\+\)\" '
+    \ .                          'msg=\"\(.*\)\" '
+    \ .                 'replacements=\"\(.*\)\" '
+    \ .                      'context=\"\(.*\)\" '
+    \ .                'contextoffset=\"\(\d\+\)\" '
+    \ .                  'errorlength=\"\(\d\+\)\"')
     let l:error = l:l1[1:4] + l:l2[1:6]
 
     " Make line/column number start at 1 rather than 0.
-    let l:error[0] += 1
+    " Make also line number absolute as in buffer.
+    let l:error[0] += a:line1
     let l:error[1] += 1
-    let l:error[2] += 1
+    let l:error[2] += a:line1
     let l:error[3] += 1
 
     " We need to change XML escape char such as &quot; into " and
     " update the contextoffset accordingly.
+    " Substitution of &amp; must be done last or else something
+    " like &amp;quot; would get first transformed into &quot;
+    " and then wrongly transformed into "  (correct is &quot;)
     for l:e in [['&quot;', '"'],
-    \           ['&aqos;', "'"],
-    \           ['&amp',   '&'],
+    \           ['&apos;', "'"],
     \           ['&gt;',   '>'],
-    \           ['&lt',    '<']]
+    \           ['&lt;',   '<'],
+    \           ['&amp;',  '&']]
       while 1
         let l:idx = stridx(l:error[7], l:e[0])
         if l:idx < 0
           break
         endif
-        let l:error[7] = substitute(l:error[7], l:e[0], l[1], '')
+        let l:error[7] = substitute(l:error[7], '\V'.l:e[0], '\'.l:e[1], '')
         if l:error[8] > l:idx
           let l:error[8] -= len(l:e[0]) - len(l:e[1])
         endif
@@ -330,5 +346,6 @@ hi def link LanguageToolLabel      Label
 hi def link LanguageToolError      Error
 hi def link LanguageToolErrorCount Title
 
-com! -nargs=0 LanguageToolCheck :call s:LanguageToolCheck()
-com! -nargs=0 LanguageToolClear :call s:LanguageToolClear()
+com! -nargs=0 -range=% LanguageToolCheck :call s:LanguageToolCheck(<line1>,
+                                                                 \ <line2>)
+com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
