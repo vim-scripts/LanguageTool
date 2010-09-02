@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 30 Aug 2010
+Last Change: 02 Sep 2010
 
 For Vim version 7.0 and above
 
@@ -210,7 +210,7 @@ is sometimes incorrect. There is already an opened ticket about this bug:
 
   http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
 
-The script currently works around it by doing patten matching with
+The script currently works around it by doing pattern matching with
 information context but it's not a perfect workaround: it can cause
 spurious highlighting of errors in rare cases.
 

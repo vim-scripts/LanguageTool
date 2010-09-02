@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/08/30
-" Version:      1.8
+" Last Change:  2010/09/02
+" Version:      1.9
 "
 " Long Description:
 "
@@ -149,7 +149,7 @@ function <sid>JumpToCurrentError(mouse)
     " The line number is correct but the column number given by LanguageTool is
     " sometimes incorrect. See opened ticket:
     " http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
-    " So finding the column is done using patten matching with information
+    " So finding the column is done using pattern matching with information
     " in error context.
     let l:context = l:error[7][byteidx(l:error[7], l:error[8])
     \                         :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
@@ -293,8 +293,8 @@ function s:LanguageToolCheck(line1, line2)
     endfor
     exe "norm z" . s:languagetool_win_height . "\<CR>"
     0
-    map <silent> <buffer> <CR> :call <sid>JumpToCurrentError(0)<CR>
-    map <silent> <LeftMouse>   :call <sid>JumpToCurrentError(1)<CR>
+    map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError(0)<CR>
+    map <silent> <LeftMouse> <LeftMouse>:call <sid>JumpToCurrentError(1)<CR>
     redraw
     echo 'Press <Enter> or click on error in scratch buffer '
     \ .  'to jump its location'
