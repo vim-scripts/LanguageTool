@@ -238,7 +238,7 @@ function s:LanguageToolCheck(line1, line2)
     \ .                        'fromx=\"\(-\?\d\+\)\" '
     \ .                          'toy=\"\(\d\+\)\" '
     \ .                          'tox=\"\(-\?\d\+\)\" ')
-    let l:l2 = matchlist(l:l, 'ruleId=\"\(\w\+\)\" '
+    let l:l2 = matchlist(l:l, 'ruleId=\"\([^"]\+\)\" '
     \ .                          'msg=\"\(.*\)\" '
     \ .                 'replacements=\"\(.*\)\" '
     \ .                      'context=\"\(.*\)\" '
@@ -302,7 +302,9 @@ function s:LanguageToolCheck(line1, line2)
       \ . '\%'  . line('$') . 'l\%9c'
       \ . '.\{' . (4 + l:error[8]) . '}\zs'
       \ . '.\{' .     (l:error[9]) . "}'"
-      call append('$', 'Correction: ' . l:error[6])
+      if len(l:error[6]) > 0
+        call append('$', 'Correction: ' . l:error[6])
+      endif
       call append('$', '')
       let l:i += 1
     endfor
