@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/09/03
-" Version:      1.10
+" Last Change:  2010/09/07
+" Version:      1.12
 "
 " Long Description:
 "
@@ -93,7 +93,7 @@ let g:loaded_languagetool = "1"
 " context a:context and its length in context is a:len.
 function s:LanguageToolHighlightRegex(line, context, start, len)
   let l:start_idx = byteidx(a:context, a:start)
-  let l:end_idx   = byteidx(a:context, a:start + a:len - 1)
+  let l:end_idx   = byteidx(a:context, a:start + a:len) - 1
 
   " The substitute allows to match errors which span multiple lines.
   " The part after \ze gives a bit of context to avoid spurious
@@ -170,7 +170,7 @@ function <sid>JumpToCurrentError(mouse)
     " So finding the column is done using pattern matching with information
     " in error context.
     let l:context = l:error[7][byteidx(l:error[7], l:error[8])
-    \                         :byteidx(l:error[7], l:error[8] + l:error[9] - 1)]
+    \                         :byteidx(l:error[7], l:error[8] + l:error[9]) - 1]
     let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[7], l:error[8], l:error[9])
     echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
     \ . ' (' . l:rule . ') ...' . l:context . '... @ '
