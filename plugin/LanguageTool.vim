@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/09/07
-" Version:      1.12
+" Last Change:  2010/09/20
+" Version:      1.13
 "
 " Long Description:
 "
@@ -89,7 +89,7 @@ endif
 let g:loaded_languagetool = "1"
 
 " Return a regular expression used to highlight a grammatical error
-" at line a:line in text.  The error starts at character a:start in 
+" at line a:line in text.  The error starts at character a:start in
 " context a:context and its length in context is a:len.
 function s:LanguageToolHighlightRegex(line, context, start, len)
   let l:start_idx = byteidx(a:context, a:start)
@@ -234,17 +234,23 @@ function s:LanguageToolCheck(line1, line2)
     let l:l  = getline('.')
     " The fromx and tox given by LanguageTool are not reliable.
     " They are even sometimes negative!
-    let l:l1 = matchlist(l:l,  'fromy=\"\(\d\+\)\" '
-    \ .                        'fromx=\"\(-\?\d\+\)\" '
-    \ .                          'toy=\"\(\d\+\)\" '
-    \ .                          'tox=\"\(-\?\d\+\)\" ')
-    let l:l2 = matchlist(l:l, 'ruleId=\"\([^"]\+\)\" '
-    \ .                          'msg=\"\(.*\)\" '
-    \ .                 'replacements=\"\(.*\)\" '
-    \ .                      'context=\"\(.*\)\" '
-    \ .                'contextoffset=\"\(\d\+\)\" '
-    \ .                  'errorlength=\"\(\d\+\)\"')
-    let l:error = l:l1[1:4] + l:l2[1:6]
+    let l:l1 = matchlist(l:l, 'fromy=\"\(\d\+\)\"\s\+'
+    \ .                       'fromx=\"\(-\?\d\+\)\"\s\+'
+    \ .                         'toy=\"\(\d\+\)\"\s\+'
+    \ .                         'tox=\"\(-\?\d\+\)\"\s\+'
+    \ .                      'ruleId=\"\([^"]*\)\"')
+
+    " From LanguageTool-1.0 to LanguageTool-1.1 (currently in beta version),
+    " subId=(...) was introduced in XML output. It is ignored for now in
+    " this plugin but it may be used later.  Plugin should be able to parse
+    " XML from both LanguageTool-1.0 and LanguageTool-1.1.
+    let l:l2 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
+    \ .              'replacements=\"\([^"]*\)\"\s\+'
+    \ .                   'context=\"\([^"]*\)\"\s\+'
+    \ .             'contextoffset=\"\(\d\+\)\"\s\+'
+    \ .               'errorlength=\"\(\d\+\)\"')
+
+    let l:error = l:l1[1:5] + l:l2[1:6]
 
     " Make line/column number start at 1 rather than 0.
     " Make also line number absolute as in buffer.
