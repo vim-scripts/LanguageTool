@@ -2,15 +2,15 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2010/09/20
-" Version:      1.13
+" Last Change:  2011/03/07
+" Version:      1.14
 "
 " Long Description:
 "
 " This plugin integrates the LanguageTool grammar checker into Vim.
 " Current version of LanguageTool can check grammar in many languages:
-" en, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca, da,
-" ml, be. See http://www.languagetool.org/ for more information about
+" en, eo, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca,
+" da, ml, be. See http://www.languagetool.org/ for more information about
 " LanguageTool.
 "
 " The script defines 2 commands:
@@ -19,11 +19,10 @@
 "   This will check for grammar mistakes in text of current buffer
 "   and highlight the errors. It also opens a new scratch window with the
 "   list of grammar errors with further explanations for each error.
-"   Pressing <Enter> or clicking on an error in scratch buffer will jump
-"   to that error. The location list for the buffer being checked
-"   is also populated. So you can use location commands such as
-"   :lopen to open the location list window, :lne to jump to the
-"   next error, etc.
+"   Pressing <Enter> in scratch buffer will jump to that error. The
+"   location list for the buffer being checked is also populated.
+"   So you can use location commands such as :lopen to open the location
+"   list window, :lne to jump to the next error, etc.
 "
 " * Use  :LanguageToolClear  to remove highlighting of grammar mistakes,
 "   close the scratch window containing the list of errors, clear and
@@ -34,11 +33,6 @@
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 "
 " See  :help LanguageTool  for more details
-"
-" ToDo:
-"
-" * Use autoload
-" * Use balloons to show info about errors (for gvim only)
 "
 " Install Details:
 "
@@ -56,27 +50,25 @@
 "    from http://www.languagetool.org/
 "    Unzip it. This should extract LanguageTool.jar among several other files
 "
-" 2/ Alternatively, download the latest LanguageTool from CVS and build it.
-"    This ensures that you get the latest version. On Ubuntu,
-"    you need to install the ant, sun-java6-jdk and cvs packages as a
+" 2/ Alternatively, download the latest LanguageTool from subversion and build
+"    it. This ensures that you get the latest version. On Ubuntu, you need
+"    to install the ant, sun-java6-jdk and subversion packages as a
 "    prerequisite:
 "
-"    $ sudo apt-get install sun-java6-jdk ant cvs
+"    $ sudo apt-get install sun-java6-jdk ant subversion
 "
 "    LanguageTool can then be downloaded and built as follows:
 "
-"    $ cvs -z3 \
-"    -d:pserver:anonymous@languagetool.cvs.sourceforge.net:/cvsroot/languagetool \
-"    co -P JLanguageTool
-"    $ cd JLanguageTool
+"    $ svn co https://languagetool.svn.sourceforge.net/svnroot/languagetool/trunk/JLanguageTool languagetool
+"    $ cd languagetool
 "    $ ant
 "
-"    This should build JLanguageTool/dist/LanguageTool.jar.
+"    This should build languagetool/dist/LanguageTool.jar.
 "
 " You then need to set up g:languagetool_jar in your ~/.vimrc with
 " the location of this LanguageTool.jar file. For example:
 "
-"   let g:languagetool_jar=$HOME . '/JLanguageTool/LanguageTool.jar'
+"   let g:languagetool_jar=$HOME . '/languagetool/LanguageTool.jar'
 "
 " License:
 "
@@ -123,7 +115,7 @@ function s:LanguageToolSetUp()
 
   let s:languagetool_jar = exists("g:languagetool_jar")
   \ ? g:languagetool_jar
-  \ : $HOME . '/JLanguageTool/dist/LanguageTool.jar'
+  \ : $HOME . '/languagetool/dist/LanguageTool.jar'
 
   if !filereadable(s:languagetool_jar)
     " Hmmm, can't find the jar file.  Try again with expand() in case user
@@ -139,19 +131,9 @@ function s:LanguageToolSetUp()
   return 0
 endfunction
 
-" Jump to a grammar mistake (called when pressing <Enter> or clicking
+" Jump to a grammar mistake (called when pressing <Enter>
 " on a particular error in scratch buffer).
-" a:mouse parameter is 1 if called from a mouse event, 0 otherwise.
-function <sid>JumpToCurrentError(mouse)
-  if a:mouse
-    call feedkeys("\<LeftMouse>")
-    let l:c = getchar()
-    if l:c == "\<LeftMouse>" && v:mouse_win == s:languagetool_error_win
-      exe v:mouse_win . 'wincmd w'
-      exe v:mouse_lnum
-      exe 'norm ' . v:mouse_col . '|'
-    endif
-  endif
+function <sid>JumpToCurrentError()
   let l:save_cursor = getpos('.')
   norm $
   if search('^Error:\s\+', 'beW') > 0
@@ -240,17 +222,18 @@ function s:LanguageToolCheck(line1, line2)
     \ .                         'tox=\"\(-\?\d\+\)\"\s\+'
     \ .                      'ruleId=\"\([^"]*\)\"')
 
-    " From LanguageTool-1.0 to LanguageTool-1.1 (currently in beta version),
-    " subId=(...) was introduced in XML output. It is ignored for now in
-    " this plugin but it may be used later.  Plugin should be able to parse
-    " XML from both LanguageTool-1.0 and LanguageTool-1.1.
-    let l:l2 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
+    " From LanguageTool-1.0 to LanguageTool-1.1 " subId=(...) was
+    " introduced in XML output. 
+    let l:l2 = matchlist(l:l, 'subId=\"\(\d\+\)\"')
+    let l:l3 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
     \ .              'replacements=\"\([^"]*\)\"\s\+'
     \ .                   'context=\"\([^"]*\)\"\s\+'
     \ .             'contextoffset=\"\(\d\+\)\"\s\+'
     \ .               'errorlength=\"\(\d\+\)\"')
 
-    let l:error = l:l1[1:5] + l:l2[1:6]
+    let l:error = l:l1[1:5]
+    \           + (len(l:l2) > 0 ? ([':' . l:l2[1]]) : [''])
+    \           + l:l3[1:6]
 
     " Make line/column number start at 1 rather than 0.
     " Make also line number absolute as in buffer.
@@ -270,13 +253,13 @@ function s:LanguageToolCheck(line1, line2)
     \           ['&lt;',   '<'],
     \           ['&amp;',  '&']]
       while 1
-        let l:idx = stridx(l:error[7], l:e[0])
+        let l:idx = stridx(l:error[8], l:e[0])
         if l:idx < 0
           break
         endif
-        let l:error[7] = substitute(l:error[7], '\V'.l:e[0], '\'.l:e[1], '')
-        if l:error[8] > l:idx
-          let l:error[8] -= len(l:e[0]) - len(l:e[1])
+        let l:error[8] = substitute(l:error[8], '\V'.l:e[0], '\'.l:e[1], '')
+        if l:error[9] > l:idx
+          let l:error[9] -= len(l:e[0]) - len(l:e[1])
         endif
       endwhile
     endfor
@@ -298,29 +281,26 @@ function s:LanguageToolCheck(line1, line2)
     for l:error in s:errors
       call append('$', 'Error:      '
       \ . (l:i + 1) . '/' . len(s:errors)
-      \ . ' ('  . l:error[4] . ')'
-      \ . ' @ ' . l:error[0] . 'L '
-      \ .         l:error[1] . 'C')
-      call append('$', 'Message:    ' . l:error[5])
-      call append('$', 'Context:    ' . l:error[7])
+      \ . ' ('  . l:error[4] . l:error[5] . ')'
+      \ . ' @ ' . l:error[0] . 'L ' . l:error[1] . 'C')
+      call append('$', 'Message:    ' . l:error[6])
+      call append('$', 'Context:    ' . l:error[8])
 
       exe "syn match LanguageToolError '"
       \ . '\%'  . line('$') . 'l\%9c'
-      \ . '.\{' . (4 + l:error[8]) . '}\zs'
-      \ . '.\{' .     (l:error[9]) . "}'"
-      if len(l:error[6]) > 0
-        call append('$', 'Correction: ' . l:error[6])
+      \ . '.\{' . (4 + l:error[9]) . '}\zs'
+      \ . '.\{' .     (l:error[10]) . "}'"
+      if len(l:error[7]) > 0
+        call append('$', 'Correction: ' . l:error[7])
       endif
       call append('$', '')
       let l:i += 1
     endfor
     exe "norm z" . s:languagetool_win_height . "\<CR>"
     0
-    map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError(0)<CR>
-    map <silent> <LeftMouse> <LeftMouse>:call <sid>JumpToCurrentError(1)<CR>
+    map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError()<CR>
     redraw
-    echo 'Press <Enter> or click on error in scratch buffer '
-    \ .  'to jump its location'
+    echo 'Press <Enter> on error in scratch buffer to jump its location'
     exe "norm \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
@@ -332,11 +312,11 @@ function s:LanguageToolCheck(line1, line2)
   " Also highlight errors in original buffer and populate location list.
   setlocal errorformat=%f:%l:%c:%m
   for l:error in s:errors
-    let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[7], l:error[8], l:error[9])
+    let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[8], l:error[9], l:error[10])
     exe "syn match LanguageToolError '" . l:re . "'"
     laddexpr expand('%') . ':'
     \ . l:error[0] . ':' . l:error[1] . ':'
-    \ . l:error[4] . ' ' . l:error[5]
+    \ . l:error[4] . ' ' . l:error[6]
   endfor
   return 0
 endfunction
@@ -360,7 +340,6 @@ function s:LanguageToolClear()
   unlet! s:languagetool_error_buffer
   unlet! s:languagetool_error_win
   unlet! s:languagetool_text_win
-  exe "sil! unmap <LeftMouse>"
 endfunction
 
 hi def link LanguageToolCmd        Comment
