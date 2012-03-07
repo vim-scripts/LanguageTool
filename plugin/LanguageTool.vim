@@ -2,16 +2,16 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2011/03/07
-" Version:      1.14
+" Last Change:  2012/03/07
+" Version:      1.15
 "
 " Long Description:
 "
 " This plugin integrates the LanguageTool grammar checker into Vim.
 " Current version of LanguageTool can check grammar in many languages:
-" en, eo, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca,
-" da, ml, be. See http://www.languagetool.org/ for more information about
-" LanguageTool.
+" ast, be, br, ca, da, en, eo, es, de, fr, gl, is, it, km, lt, ml, nl,
+" pl, ro, ru, sk, sl, sv, uk, zh. See http://www.languagetool.org/
+" for more information about LanguageTool.
 "
 " The script defines 2 commands:
 "
@@ -44,18 +44,21 @@
 "   $ vim -c 'helptags ~/.vim/doc'
 "
 " You also need to install the Java LanguageTool program in order to use
-" this plugin. There are 2 possibilities:
+" this plugin. There are 3 possibilities:
 "
-" 1/ Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt
-"    from http://www.languagetool.org/
+" 1/ Download the latest official OpenOffice/LibreOffice LanguageTool plugin
+"    file LanguageTool-*.oxt from http://www.languagetool.org/
 "    Unzip it. This should extract LanguageTool.jar among several other files
 "
-" 2/ Alternatively, download the latest LanguageTool from subversion and build
+" 2/ Or download an unnoficial nightly build available at:
+"    http://www.languagetool.org/download/snapshots/
+"
+" 3/ Or, download the latest LanguageTool from subversion and build
 "    it. This ensures that you get the latest version. On Ubuntu, you need
 "    to install the ant, sun-java6-jdk and subversion packages as a
 "    prerequisite:
 "
-"    $ sudo apt-get install sun-java6-jdk ant subversion
+"    $ sudo apt-get install openjdk-6-jdk ant subversion
 "
 "    LanguageTool can then be downloaded and built as follows:
 "
@@ -231,9 +234,20 @@ function s:LanguageToolCheck(line1, line2)
     \ .             'contextoffset=\"\(\d\+\)\"\s\+'
     \ .               'errorlength=\"\(\d\+\)\"')
 
+    " l:error[0] ... fromy
+    " l:error[1] ... fromx
+    " l:error[2] ... toy
+    " l:error[3] ... tox
+    " l:error[4] ... ruleId
+    " l:error[5] ... subId
+    " l:error[6] ... msg
+    " l:error[7] ... replacement
+    " l:error[8] ... context
+    " l:error[9] ... contextoffset
+    " l:error[10] .. errorlength
     let l:error = l:l1[1:5]
     \           + (len(l:l2) > 0 ? ([':' . l:l2[1]]) : [''])
-    \           + l:l3[1:6]
+    \           + l:l3[1:5]
 
     " Make line/column number start at 1 rather than 0.
     " Make also line number absolute as in buffer.
@@ -258,9 +272,6 @@ function s:LanguageToolCheck(line1, line2)
           break
         endif
         let l:error[8] = substitute(l:error[8], '\V'.l:e[0], '\'.l:e[1], '')
-        if l:error[9] > l:idx
-          let l:error[9] -= len(l:e[0]) - len(l:e[1])
-        endif
       endwhile
     endfor
     call add(s:errors, l:error)

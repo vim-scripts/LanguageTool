@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 27 Mar 2011
+Last Change: 20 Feb 2012
 
 For Vim version 7.0 and above
 
@@ -22,11 +22,13 @@ For Vim version 7.0 and above
 1. Overview                                           *languagetool-overview*
 
 This plugin integrates LanguageTool into Vim. LanguageTool is an Open Source
-style and grammar checker for English, French, German, Polish, Dutch,
-Romanian and many other languages. LanguageTool detects grammar mistakes
-that a spelling checker cannot detect. LanguageTool does not do spelling
-checking. Vim builtin spelling checker can of course be used along with
-LanguageTool.
+style and grammar checker for English, French, German, etc. See
+http://www.languagetool.org/languages/ for a complete list of supported
+languages.
+
+LanguageTool detects grammar mistakes that a spelling checker cannot detect.
+LanguageTool does not do spelling checking. Vim builtin spelling checker can
+of course be used along with LanguageTool.
 
 See http://www.languagetool.org/ for more information about LanguageTool.
 
@@ -66,7 +68,7 @@ under Unix or %HOMEPATH%\vimfiles under Windows): >
   $ unzip /path-to/LanguageTool.zip
   $ vim -c 'helptags ~/.vim/doc'
 
-The zip file contains files: >
+The zip file contains the following files: >
 
    plugin/LanguageTool.vim
    doc/LanguageTool.vim
@@ -92,22 +94,26 @@ from sources ensures that you get the latest version.
 Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt and
 unzip it: >
 
-  $ wget http://www.languagetool.org/download/LanguageTool-1.3.oxt
-  $ unzip LanguageTool-1.3.oxt
+  $ wget http://www.languagetool.org/download/LanguageTool-1.6.oxt
+  $ unzip LanguageTool-1.6.oxt
 
 This should extract LanguageTool.jar among several other files.
 
-You may find more recent development snapshots at:
+You may find more recent versions at:
 
   http://www.languagetool.org/download/
 
-4.2.2 Build LanguageTool from sources in Subversion
+Daily builds are also available:
+
+  http://www.languagetool.org/download/snapshots/
+
+4.2.2 Build LanguageTool from sources in Subversion~
 
 If you prefer to build LanguageTool yourself from sources, you first need
 to install the pre-requisite packages. On Ubuntu, you need to install the
 following packages: >
 
-  $ sudo apt-get install sun-java6-jdk ant subversion
+  $ sudo apt-get install openjdk-6-jdk ant subversion
 
 LanguageTool can then be downloaded and built as follows: >
 
@@ -116,6 +122,15 @@ LanguageTool can then be downloaded and built as follows: >
   $ ant
 
 This should build janguagetool/dist/LanguageTool.jar.
+
+4.3 Configuring the location of LanguageTool.jar~
+
+After installing LanguageTool, you must specify the location of the file
+LanguageTool.jar in your $HOME/.vimrc file: >
+
+  let g:languagetool_jar='$HOME/languagetool/dist/LanguageTool.jar'
+
+See section |languagetool-configuration| for more settings.
 
 ============================================================================
 
@@ -185,8 +200,8 @@ and close the location-list.
 
 Using the error scratch window~
 
-Pressing <Enter> or clicking on an error in the error scratch buffer will
-jump to that error.
+Pressing <Enter> on an error in the error scratch buffer will jump to that
+error.
 
 Using the Location-list~
 
