@@ -2,14 +2,14 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 20 Feb 2012
+Last Change: 30 May 2012
 
 For Vim version 7.0 and above
 
 ============================================================================
 
 1.  Overview                                      |languagetool-overview|
-2.  Screenshots                                   |languagetool-screenshots|
+2.  Screenshots & Demo                            |languagetool-screenshots|
 3.  Download                                      |languagetool-download|
 4.  Installation                                  |languagetool-installation|
 5.  Configuration                                 |languagetool-configuration|
@@ -34,13 +34,17 @@ See http://www.languagetool.org/ for more information about LanguageTool.
 
 ============================================================================
 
-2. Screenshots                                     *languagetool-screenshots*
+2. Screenshots & Demo                              *languagetool-screenshots*
 
 If you don't have time to read help files, these screenshots will give you
 an idea of what the LanguageTool plugin does:
 
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
+
+A screencast demo is also available at:
+  
+  http://shelr.tv/records/4fba8ef99660803e4f00001f
 
 ============================================================================
 
@@ -70,8 +74,8 @@ under Unix or %HOMEPATH%\vimfiles under Windows): >
 
 The zip file contains the following files: >
 
-   plugin/LanguageTool.vim
-   doc/LanguageTool.vim
+  plugin/LanguageTool.vim
+  doc/LanguageTool.vim
 
 You have to enable plugins by adding these two lines in your |.vimrc| file: >
 
@@ -94,8 +98,8 @@ from sources ensures that you get the latest version.
 Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt and
 unzip it: >
 
-  $ wget http://www.languagetool.org/download/LanguageTool-1.6.oxt
-  $ unzip LanguageTool-1.6.oxt
+  $ wget http://www.languagetool.org/download/LanguageTool-1.7.oxt
+  $ unzip LanguageTool-1.7.oxt
 
 This should extract LanguageTool.jar among several other files.
 

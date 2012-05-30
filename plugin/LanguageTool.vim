@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/03/07
-" Version:      1.15
+" Last Change:  2012/05/30
+" Version:      1.16
 "
 " Long Description:
 "
@@ -13,7 +13,7 @@
 " pl, ro, ru, sk, sl, sv, uk, zh. See http://www.languagetool.org/
 " for more information about LanguageTool.
 "
-" The script defines 2 commands:
+" The script defines 2 Ex commands:
 "
 " * Use  :LanguageToolCheck  to check grammar in current buffer.
 "   This will check for grammar mistakes in text of current buffer
@@ -31,6 +31,9 @@
 " See screenshots of grammar checking in English and French at:
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
+"
+" See also screencast demo at:
+"    http://shelr.tv/records/4fba8ef99660803e4f00001f 
 "
 " See  :help LanguageTool  for more details
 "
@@ -53,7 +56,7 @@
 " 2/ Or download an unnoficial nightly build available at:
 "    http://www.languagetool.org/download/snapshots/
 "
-" 3/ Or, download the latest LanguageTool from subversion and build
+" 3/ Or download the latest LanguageTool from subversion and build
 "    it. This ensures that you get the latest version. On Ubuntu, you need
 "    to install the ant, sun-java6-jdk and subversion packages as a
 "    prerequisite:
@@ -157,7 +160,7 @@ function <sid>JumpToCurrentError()
     let l:context = l:error[7][byteidx(l:error[7], l:error[8])
     \                         :byteidx(l:error[7], l:error[8] + l:error[9]) - 1]
     let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[7], l:error[8], l:error[9])
-    echo 'Jump to error ' . l:error_idx . '/' . len(s:errors)
+    echon 'Jump to error ' . l:error_idx . '/' . len(s:errors)
     \ . ' (' . l:rule . ') ...' . l:context . '... @ '
     \ . l:line . 'L ' . l:col . 'C'
     call search(l:re)
@@ -225,7 +228,7 @@ function s:LanguageToolCheck(line1, line2)
     \ .                         'tox=\"\(-\?\d\+\)\"\s\+'
     \ .                      'ruleId=\"\([^"]*\)\"')
 
-    " From LanguageTool-1.0 to LanguageTool-1.1 " subId=(...) was
+    " From LanguageTool-1.0 to LanguageTool-1.1, subId=(...) was
     " introduced in XML output. 
     let l:l2 = matchlist(l:l, 'subId=\"\(\d\+\)\"')
     let l:l3 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
@@ -233,6 +236,10 @@ function s:LanguageToolCheck(line1, line2)
     \ .                   'context=\"\([^"]*\)\"\s\+'
     \ .             'contextoffset=\"\(\d\+\)\"\s\+'
     \ .               'errorlength=\"\(\d\+\)\"')
+
+    " From LanguageTool-1.7 to LanguageTool-1.8 and optional
+    " url="..." was introduced in XML output.
+    let l:l4 = matchlist(l:l, 'url=\"\([^"]*\)\"')
 
     " l:error[0] ... fromy
     " l:error[1] ... fromx
@@ -245,9 +252,11 @@ function s:LanguageToolCheck(line1, line2)
     " l:error[8] ... context
     " l:error[9] ... contextoffset
     " l:error[10] .. errorlength
+    " l:error[11] .. url
     let l:error = l:l1[1:5]
     \           + (len(l:l2) > 0 ? ([':' . l:l2[1]]) : [''])
     \           + l:l3[1:5]
+    \           + (len(l:l4) > 0 ? ([l:l4[1]]) : [''])
 
     " Make line/column number start at 1 rather than 0.
     " Make also line number absolute as in buffer.
@@ -287,7 +296,9 @@ function s:LanguageToolCheck(line1, line2)
     syn clear
     syn match LanguageToolCmd   '\%1l.*'
     syn match LanguageToolLabel '^\(Pos\|Rule\|Context\|Message\|Correction\):'
+    syn match LanguageToolLabelMoreInfo '^More info:.*' contains=LanguageToolUrl
     syn match LanguageToolErrorCount '^Error:\s\+\d\+.\d\+'
+    syn match LanguageToolUrl '^More info:\s*\zs.*' contained
     let l:i = 0
     for l:error in s:errors
       call append('$', 'Error:      '
@@ -304,6 +315,9 @@ function s:LanguageToolCheck(line1, line2)
       if len(l:error[7]) > 0
         call append('$', 'Correction: ' . l:error[7])
       endif
+      if len(l:error[11]) > 0
+        call append('$', 'More info:  ' . l:error[11])
+      endif
       call append('$', '')
       let l:i += 1
     endfor
@@ -311,7 +325,7 @@ function s:LanguageToolCheck(line1, line2)
     0
     map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError()<CR>
     redraw
-    echo 'Press <Enter> on error in scratch buffer to jump its location'
+    echon 'Press <Enter> on error in scratch buffer to jump its location'
     exe "norm \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
@@ -353,10 +367,12 @@ function s:LanguageToolClear()
   unlet! s:languagetool_text_win
 endfunction
 
-hi def link LanguageToolCmd        Comment
-hi def link LanguageToolLabel      Label
-hi def link LanguageToolError      Error
-hi def link LanguageToolErrorCount Title
+hi def link LanguageToolCmd           Comment
+hi def link LanguageToolLabel         Label
+hi def link LanguageToolLabelMoreInfo Label
+hi def link LanguageToolError         Error
+hi def link LanguageToolErrorCount    Title
+hi def link LanguageToolUrl           Underlined
 
 com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
 com! -nargs=0 -range=% LanguageToolCheck :call s:LanguageToolCheck(<line1>,

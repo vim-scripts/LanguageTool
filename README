@@ -1,10 +1,9 @@
 This is a mirror of http://www.vim.org/scripts/script.php?script_id=3223
 
 This plugin integrates the LanguageTool grammar checker into Vim.
-Current version of LanguageTool can check grammar in many languages:
-en, eo, de, pl, fr, es, it, nl, lt, uk, ru, sk, sl, sv, ro, is, gl, ca,
-da, ml, be. See http://www.languagetool.org/ for more information about
-LanguageTool.
+Current version of LanguageTool can check grammar in many languages
+See the list of supported languages: http://www.languagetool.org/languages/
+or http://www.languagetool.org/ or more information about LanguageTool.
 
 The script defines 2 commands:
 
@@ -25,7 +24,10 @@ See screenshots of grammar checking in English and French at:
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 
-See  :help LanguageTool  for more details
+Demo:
+  http://shelr.tv/records/4fba8ef99660803e4f00001f
+  
+See  :help LanguageTool  for more details.
 
 Bugs:  
   Column number reported by LanguageTool indicating the location of the 
