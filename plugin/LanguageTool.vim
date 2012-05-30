@@ -3,7 +3,7 @@
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 " Last Change:  2012/05/30
-" Version:      1.16
+" Version:      1.17
 "
 " Long Description:
 "
@@ -102,6 +102,19 @@ function s:LanguageToolHighlightRegex(line, context, start, len)
   \     . substitute(escape(a:context[l:start_idx : l:end_idx], "'\\"), ' ', '\\_\\s', 'g')
   \     . '\ze'
   \     . substitute(escape(a:context[l:end_idx + 1: l:end_idx + 5], "'\\"), ' ', '\\_\\s', 'g')
+endfunction
+
+" Unescape XML special characters in a:text.
+function s:XmlUnescape(text)
+  " Change XML escape char such as &quot; into "
+  " Substitution of &amp; must be done last or else something
+  " like &amp;quot; would get first transformed into &quot;
+  " and then wrongly transformed into "  (correct is &quot;)
+  let l:escaped = substitute(a:text,    '&quot;', '"',  'g')
+  let l:escaped = substitute(l:escaped, '&apos;', "'",  'g')
+  let l:escaped = substitute(l:escaped, '&gt;',   '>',  'g')
+  let l:escaped = substitute(l:escaped, '&lt;',   '<',  'g')
+  return          substitute(l:escaped, '&amp;',  '\&', 'g')
 endfunction
 
 " Set up configuration.
@@ -265,24 +278,10 @@ function s:LanguageToolCheck(line1, line2)
     let l:error[2] += a:line1
     let l:error[3] += 1
 
-    " We need to change XML escape char such as &quot; into " and
-    " update the contextoffset accordingly.
-    " Substitution of &amp; must be done last or else something
-    " like &amp;quot; would get first transformed into &quot;
-    " and then wrongly transformed into "  (correct is &quot;)
-    for l:e in [['&quot;', '"'],
-    \           ['&apos;', "'"],
-    \           ['&gt;',   '>'],
-    \           ['&lt;',   '<'],
-    \           ['&amp;',  '&']]
-      while 1
-        let l:idx = stridx(l:error[8], l:e[0])
-        if l:idx < 0
-          break
-        endif
-        let l:error[8] = substitute(l:error[8], '\V'.l:e[0], '\'.l:e[1], '')
-      endwhile
-    endfor
+    let l:error[6]  = s:XmlUnescape(l:error[6])
+    let l:error[8]  = s:XmlUnescape(l:error[8])
+    let l:error[7]  = s:XmlUnescape(l:error[7])
+    let l:error[11] = s:XmlUnescape(l:error[11])
     call add(s:errors, l:error)
   endwhile
 
