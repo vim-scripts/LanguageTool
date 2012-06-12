@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/05/30
-" Version:      1.17
+" Last Change:  2012/06/12
+" Version:      1.18
 "
 " Long Description:
 "
@@ -33,7 +33,7 @@
 "   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 "
 " See also screencast demo at:
-"    http://shelr.tv/records/4fba8ef99660803e4f00001f 
+"    http://shelr.tv/records/4fba8ef99660803e4f00001f
 "
 " See  :help LanguageTool  for more details
 "
@@ -53,12 +53,12 @@
 "    file LanguageTool-*.oxt from http://www.languagetool.org/
 "    Unzip it. This should extract LanguageTool.jar among several other files
 "
-" 2/ Or download an unnoficial nightly build available at:
+" 2/ Or download an unofficial nightly build available at:
 "    http://www.languagetool.org/download/snapshots/
 "
 " 3/ Or download the latest LanguageTool from subversion and build
 "    it. This ensures that you get the latest version. On Ubuntu, you need
-"    to install the ant, sun-java6-jdk and subversion packages as a
+"    to install the ant, openjdk-6-jdk and subversion packages as a
 "    prerequisite:
 "
 "    $ sudo apt-get install openjdk-6-jdk ant subversion
@@ -90,8 +90,10 @@ let g:loaded_languagetool = "1"
 " at line a:line in text.  The error starts at character a:start in
 " context a:context and its length in context is a:len.
 function s:LanguageToolHighlightRegex(line, context, start, len)
-  let l:start_idx = byteidx(a:context, a:start)
-  let l:end_idx   = byteidx(a:context, a:start + a:len) - 1
+  let l:start_idx     = byteidx(a:context, a:start)
+  let l:end_idx       = byteidx(a:context, a:start + a:len - 1)
+  let l:start_ctx_idx = byteidx(a:context, a:start + a:len)
+  let l:end_ctx_idx   = byteidx(a:context, a:start + a:len + 5)
 
   " The substitute allows to match errors which span multiple lines.
   " The part after \ze gives a bit of context to avoid spurious
@@ -101,7 +103,7 @@ function s:LanguageToolHighlightRegex(line, context, start, len)
   \     . '\%' . a:line . 'l'
   \     . substitute(escape(a:context[l:start_idx : l:end_idx], "'\\"), ' ', '\\_\\s', 'g')
   \     . '\ze'
-  \     . substitute(escape(a:context[l:end_idx + 1: l:end_idx + 5], "'\\"), ' ', '\\_\\s', 'g')
+  \     . substitute(escape(a:context[l:start_ctx_idx : l:end_ctx_idx + 5], "'\\"), ' ', '\\_\\s', 'g')
 endfunction
 
 " Unescape XML special characters in a:text.
@@ -128,9 +130,13 @@ function s:LanguageToolSetUp()
   \ : 14
   let s:languagetool_encoding = &fenc ? &fenc : &enc
 
-  " Only pick the first 2 letters of spelllang, so "en_us" for example
-  " is transformed into "en".
-  let s:languagetool_lang = (&spelllang == '') ? 'en' : (&spelllang)[:1]
+  if exists("g:languatool_lang")
+    let s:languagetool_lang = g:languagetool_lang
+  else
+    " Only pick the first 2 letters of spelllang, so "en_us" for example
+    " is transformed into "en".
+    let s:languagetool_lang = (&spelllang == '') ? 'en' : (&spelllang)[:1]
+  endif
 
   let s:languagetool_jar = exists("g:languagetool_jar")
   \ ? g:languagetool_jar
@@ -242,7 +248,7 @@ function s:LanguageToolCheck(line1, line2)
     \ .                      'ruleId=\"\([^"]*\)\"')
 
     " From LanguageTool-1.0 to LanguageTool-1.1, subId=(...) was
-    " introduced in XML output. 
+    " introduced in XML output.
     let l:l2 = matchlist(l:l, 'subId=\"\(\d\+\)\"')
     let l:l3 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
     \ .              'replacements=\"\([^"]*\)\"\s\+'
@@ -307,10 +313,17 @@ function s:LanguageToolCheck(line1, line2)
       call append('$', 'Message:    ' . l:error[6])
       call append('$', 'Context:    ' . l:error[8])
 
-      exe "syn match LanguageToolError '"
-      \ . '\%'  . line('$') . 'l\%9c'
-      \ . '.\{' . (4 + l:error[9]) . '}\zs'
-      \ . '.\{' .     (l:error[10]) . "}'"
+      if l:error[4] == 'HUNSPELL_RULE'
+        exe "syn match LanguageToolSpellingError '"
+        \ . '\%'  . line('$') . 'l\%9c'
+        \ . '.\{' . (4 + l:error[9]) . '}\zs'
+        \ . '.\{' .     (l:error[10]) . "}'"
+      else
+        exe "syn match LanguageToolGrammarError '"
+        \ . '\%'  . line('$') . 'l\%9c'
+        \ . '.\{' . (4 + l:error[9]) . '}\zs'
+        \ . '.\{' .     (l:error[10]) . "}'"
+      endif
       if len(l:error[7]) > 0
         call append('$', 'Correction: ' . l:error[7])
       endif
@@ -337,10 +350,17 @@ function s:LanguageToolCheck(line1, line2)
   setlocal errorformat=%f:%l:%c:%m
   for l:error in s:errors
     let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[8], l:error[9], l:error[10])
-    exe "syn match LanguageToolError '" . l:re . "'"
-    laddexpr expand('%') . ':'
-    \ . l:error[0] . ':' . l:error[1] . ':'
-    \ . l:error[4] . ' ' . l:error[6]
+    if l:error[4] == 'HUNSPELL_RULE'
+      exe "syn match LanguageToolSpellingError '" . l:re . "'"
+      laddexpr expand('%') . ':'
+      \ . l:error[0] . ':' . l:error[1] . ':'
+      \ . l:error[4] . ' ' . l:error[6]
+    else
+      exe "syn match LanguageToolGrammarError '" . l:re . "'"
+      laddexpr expand('%') . ':'
+      \ . l:error[0] . ':' . l:error[1] . ':'
+      \ . l:error[4] . ' ' . l:error[6]
+    endif
   endfor
   return 0
 endfunction
@@ -356,7 +376,8 @@ function s:LanguageToolClear()
   if exists('s:languagetool_text_win')
     let l:win = winnr()
     exe s:languagetool_text_win . 'wincmd w'
-    syn clear LanguageToolError
+    syn clear LanguageToolGrammarError
+    syn clear LanguageToolSpellingError
     lexpr ''
     lclose
     exe l:win . 'wincmd w'
@@ -369,7 +390,8 @@ endfunction
 hi def link LanguageToolCmd           Comment
 hi def link LanguageToolLabel         Label
 hi def link LanguageToolLabelMoreInfo Label
-hi def link LanguageToolError         Error
+hi def link LanguageToolGrammarError  Error
+hi def link LanguageToolSpellingError WarningMsg
 hi def link LanguageToolErrorCount    Title
 hi def link LanguageToolUrl           Underlined
 

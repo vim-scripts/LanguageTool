@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 30 May 2012
+Last Change: 12 Jun 2012
 
 For Vim version 7.0 and above
 
@@ -26,9 +26,17 @@ style and grammar checker for English, French, German, etc. See
 http://www.languagetool.org/languages/ for a complete list of supported
 languages.
 
-LanguageTool detects grammar mistakes that a spelling checker cannot detect.
-LanguageTool does not do spelling checking. Vim builtin spelling checker can
-of course be used along with LanguageTool.
+LanguageTool detects grammar mistakes that a spelling checker cannot detect
+such as "it work" instead of "it works". Since version 1.8, LanguageTool can
+now also detect spelling mistakes using Hunspell dictionaries bundled with
+LanguageTool for several languages. Vim builtin spelling checker can also of
+course be used along with LanguageTool. One advantage of the spelling checker
+of LanguageTool over Vim spelling checker, is that it uses native Hunspell
+dictionary directly, so it works even with the latest Hunspell dictionaries
+containing features not supported by Vim.  For example, the latest French
+Hunspell dictionaries from htt://www.dicollect.org are not supported by Vim
+but they work well with LanguageTool. On the other hand, the Vim spelling
+checker is faster.
 
 See http://www.languagetool.org/ for more information about LanguageTool.
 
@@ -143,10 +151,6 @@ See section |languagetool-configuration| for more settings.
 LanguageTool plugin uses character encoding from the 'fenc' option or from
 the 'enc' option if 'fenc' is empty.
 
-The language used for grammar checking is automatically selected from the
-'spelllang' Vim option. If 'spelllang' option is empty, English (en) is
-used by default.
-
 Several global variables can be set in your |vimrc| to configure the behavior
 of the LanguageTool plugin.
 
@@ -156,10 +160,58 @@ g:languagetool_jar                                       *g:languagetool_jar*
   checker program.
   Default is: $HOME/languagetool/dist/LanguageTool.jar
 
+g:languagetool_lang
+
+  The language ISO code (2 letters) to use for the language tool checker.
+  If undefined, plugin selects the language of the Vim spelling
+  checker 'spelllang'.  If neither g:languagetool_lang or 'spelllang'
+  are defined, plugin defaults to English (en).  Starting with
+  LanguageToo-1.8, the regional variants can also be specified. The
+  valid language codes in LanguageTool-1.8 are: >
+
+    ast    Asturian
+    be     Belarusian
+    br     Breton
+    ca     Catalan
+    cs     Czech
+    de     German
+    de_AT  German  (Austria)
+    de_CH  German  (Switzerland)
+    de_DE  German  (Germany)
+    el     Greek
+    en     English
+    en_AU  English (Australia)
+    en_CA  English (Canada)
+    en_GB  English (Great Britain)
+    en_NZ  English (New Zealand)
+    en_US  English (US)
+    en_ZA  English (South Africa)
+    eo     Esperanto
+    es     Spanish
+    fr     French
+    gl     Galician
+    is     Icelandic
+    it     Italian
+    km     Khmer
+    lt     Lithuanian
+    ml     Malaylam
+    nl     Dutch
+    pl     Polish
+    ro     Romanian
+    ru     Russian
+    sk     Slovak
+    sl     Slovenian
+    sv     Swedish
+    tl     Tagalog
+    uk     Ukrainian
+    zh     Chinese
+
 g:languagetool_disable_rules                   *g:languagetool_disable_rules*
 
   This variable specifies checker rules which are disabled. Each disabled
-  rule must be comma separated.
+  rule must be comma separated. In particular, it can be used to disable
+  spelling checking done by LanguageTool using using -d HUNSPELL_RULE.
+  Disabling HUNSPELL_RULE significantly speeds up LanguageTool.
   Default is: WHITESPACE_RULE,EN_QUOTES
 
 g:languagetool_win_height                         *g:languagetool_win_height*
@@ -172,7 +224,8 @@ g:languagetool_win_height                         *g:languagetool_win_height*
 
 You can also customize the following syntax highlighting groups: >
 
-  LanguageToolError
+  LanguageToolGrammarError
+  LanguageToolSpellingError
   LanguageToolCmd
   LanguageToolLabel
   LanguageToolErrorCount
