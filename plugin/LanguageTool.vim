@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/06/12
-" Version:      1.18
+" Last Change:  2012/06/17
+" Version:      1.19
 "
 " Long Description:
 "
@@ -91,9 +91,9 @@ let g:loaded_languagetool = "1"
 " context a:context and its length in context is a:len.
 function s:LanguageToolHighlightRegex(line, context, start, len)
   let l:start_idx     = byteidx(a:context, a:start)
-  let l:end_idx       = byteidx(a:context, a:start + a:len - 1)
+  let l:end_idx       = byteidx(a:context, a:start + a:len) - 1
   let l:start_ctx_idx = byteidx(a:context, a:start + a:len)
-  let l:end_ctx_idx   = byteidx(a:context, a:start + a:len + 5)
+  let l:end_ctx_idx   = byteidx(a:context, a:start + a:len + 5) - 1
 
   " The substitute allows to match errors which span multiple lines.
   " The part after \ze gives a bit of context to avoid spurious
@@ -103,7 +103,7 @@ function s:LanguageToolHighlightRegex(line, context, start, len)
   \     . '\%' . a:line . 'l'
   \     . substitute(escape(a:context[l:start_idx : l:end_idx], "'\\"), ' ', '\\_\\s', 'g')
   \     . '\ze'
-  \     . substitute(escape(a:context[l:start_ctx_idx : l:end_ctx_idx + 5], "'\\"), ' ', '\\_\\s', 'g')
+  \     . substitute(escape(a:context[l:start_ctx_idx : l:end_ctx_idx], "'\\"), ' ', '\\_\\s', 'g')
 endfunction
 
 " Unescape XML special characters in a:text.
