@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 12 Jun 2012
+Last Change: 26 Jun 2012
 
 For Vim version 7.0 and above
 
@@ -29,14 +29,14 @@ languages.
 LanguageTool detects grammar mistakes that a spelling checker cannot detect
 such as "it work" instead of "it works". Since version 1.8, LanguageTool can
 now also detect spelling mistakes using Hunspell dictionaries bundled with
-LanguageTool for several languages. Vim builtin spelling checker can also of
-course be used along with LanguageTool. One advantage of the spelling checker
-of LanguageTool over Vim spelling checker, is that it uses native Hunspell
-dictionary directly, so it works even with the latest Hunspell dictionaries
-containing features not supported by Vim.  For example, the latest French
-Hunspell dictionaries from htt://www.dicollect.org are not supported by Vim
-but they work well with LanguageTool. On the other hand, the Vim spelling
-checker is faster.
+LanguageTool for several languages or morfologik for some languages. Vim
+builtin spelling checker can also of course be used along with LanguageTool.
+One advantage of the spelling checker of LanguageTool over Vim spelling
+checker, is that it uses native Hunspell dictionary directly, so it works
+even with the latest Hunspell dictionaries containing features not supported
+by Vim. For example, the latest French Hunspell dictionaries from
+http://www.dicollect.org are not supported by Vim but they work well
+with LanguageTool. On the other hand, the Vim spelling checker is faster.
 
 See http://www.languagetool.org/ for more information about LanguageTool.
 
@@ -95,11 +95,11 @@ You have to enable plugins by adding these two lines in your |.vimrc| file: >
 To use this plugin, you need to install the Java LanguageTool program. You
 can choose to:
 
-* download the LanguageTool plugin for OpenOffice;
+* download LanguageTool.oxt plugin for OpenOffice: this plugin has
+  no Hunspell dictionaries.
+* or download LanguageTool.zip which includes spelling dictionaries.
 * or checkout and build the latest LanguageTool from sources in subversion.
-
-Downloading the OpenOffice plugin is simpler, but building LanguageTool
-from sources ensures that you get the latest version.
+  This also includes spelling dictionaries.
 
 4.2.1 Download LanguageTool plugin for OpenOffice~
 
@@ -164,28 +164,29 @@ g:languagetool_lang
 
   The language ISO code (2 letters) to use for the language tool checker.
   If undefined, plugin selects the language of the Vim spelling
-  checker 'spelllang'.  If neither g:languagetool_lang or 'spelllang'
-  are defined, plugin defaults to English (en).  Starting with
-  LanguageToo-1.8, the regional variants can also be specified. The
-  valid language codes in LanguageTool-1.8 are: >
+  checker 'spelllang'. If neither g:languagetool_lang or 'spelllang'
+  are defined, plugin defaults to English (en_US). Starting with
+  LanguageTool-1.8, regional variants of some languages can be specified.
+  The valid language codes in LanguageTool-1.8 are: >
 
     ast    Asturian
     be     Belarusian
     br     Breton
     ca     Catalan
     cs     Czech
+    da     Danish
     de     German
-    de_AT  German  (Austria)
-    de_CH  German  (Switzerland)
-    de_DE  German  (Germany)
+    de-AT  German  (Austria)
+    de-CH  German  (Switzerland)
+    de-DE  German  (Germany)
     el     Greek
     en     English
-    en_AU  English (Australia)
-    en_CA  English (Canada)
-    en_GB  English (Great Britain)
-    en_NZ  English (New Zealand)
-    en_US  English (US)
-    en_ZA  English (South Africa)
+    en-AU  English (Australia)
+    en-CA  English (Canada)
+    en-GB  English (Great Britain)
+    en-NZ  English (New Zealand)
+    en-US  English (US)
+    en-ZA  English (South Africa)
     eo     Esperanto
     es     Spanish
     fr     French
@@ -194,9 +195,10 @@ g:languagetool_lang
     it     Italian
     km     Khmer
     lt     Lithuanian
-    ml     Malaylam
+    ml     Malayalam
     nl     Dutch
     pl     Polish
+    pt     Portuguese
     ro     Romanian
     ru     Russian
     sk     Slovak
@@ -209,10 +211,8 @@ g:languagetool_lang
 g:languagetool_disable_rules                   *g:languagetool_disable_rules*
 
   This variable specifies checker rules which are disabled. Each disabled
-  rule must be comma separated. In particular, it can be used to disable
-  spelling checking done by LanguageTool using using -d HUNSPELL_RULE.
-  Disabling HUNSPELL_RULE significantly speeds up LanguageTool.
-  Default is: WHITESPACE_RULE,EN_QUOTES
+  rule must be comma separated.
+  Default value set by plugin is: WHITESPACE_RULE,EN_QUOTES
 
 g:languagetool_win_height                         *g:languagetool_win_height*
 
@@ -242,7 +242,7 @@ The LanguageTool plugin defines 2 commands |:LanguageToolCheck| and
 Use the |:LanguageToolCheck| command to check the grammar in the current
 buffer. This will highlight errors in the buffer. It will also open a new
 scratch window with the list of grammar mistakes with further explanations
-for each error.  It also populates the location-list for the window.
+for each error. It also populates the location-list for the window.
 
 The |:LanguageToolCheck| command accepts a range. You can for example check
 grammar between lines 100 and 200 in buffer with :100,200LanguageToolCheck,
@@ -267,7 +267,7 @@ use location-list Vim commands such as |:lopen| to open the location-list
 window, |:lne| to jump to the next error, etc.
 
 The error scratch window may seem redundant with the location-list, but the
-scratch window is more flexible to present errors in a nice way.  If you do
+scratch window is more flexible to present errors in a nice way. If you do
 not wish to popup the error scratch window, but use the location-list only,
 you can disable it by setting |g:languagetool_win_height| to a negative value.
 
@@ -282,7 +282,8 @@ is sometimes incorrect. There is already an opened ticket about this bug:
 
 The script currently works around it by doing pattern matching with
 information context but it's not a perfect workaround: it can cause
-spurious highlighting of errors in rare cases.
+spurious highlighting of errors in rare cases. This bug is fixed in
+the latest version of LanguageTool-1.8.
 
 Please report bugs or suggestions to <dominique.pelle@gmail.com>.
 Alternatively, you can also discuss improvements to this plugin in Wiki

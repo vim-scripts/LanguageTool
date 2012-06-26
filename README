@@ -7,36 +7,37 @@ or http://www.languagetool.org/ or more information about LanguageTool.
 
 The script defines 2 commands:
 
-* Use  :LanguageToolCheck  to check grammar in current buffer.
-  This will check for grammar mistakes in text of current buffer
-  and highlight the errors. It also opens a new scratch window with the
-  list of grammar errors with further explanations for each error.
-  Pressing <Enter> in scratch buffer will jump to that error. The
-  location list for the buffer being checked is also populated.
-  So you can use location commands such as :lopen to open the location
-  list window, :lne to jump to the next error, etc.
+* Use  :LanguageToolCheck  to check grammar in current buffer.
+  This will check for grammar mistakes in text of current buffer
+  and highlight the errors. It also opens a new scratch window with the
+  list of grammar errors with further explanations for each error.
+  Pressing <Enter> in scratch buffer will jump to that error. The
+  location list for the buffer being checked is also populated.
+  So you can use location commands such as :lopen to open the location
+  list window, :lne to jump to the next error, etc.
 
-* Use  :LanguageToolClear  to remove highlighting of grammar mistakes,
-  close the scratch window containing the list of errors, clear and
-  close the location list.
+* Use  :LanguageToolClear  to remove highlighting of grammar mistakes,
+  close the scratch window containing the list of errors, clear and
+  close the location list.
 
 See screenshots of grammar checking in English and French at:
-  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
-  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
+  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 
 Demo:
-  http://shelr.tv/records/4fba8ef99660803e4f00001f
-  
-See  :help LanguageTool  for more details.
+  http://shelr.tv/records/4fba8ef99660803e4f00001f
+  
+See  :help LanguageTool  for more details.
 
-Bugs:  
-  Column number reported by LanguageTool indicating the location of the 
-  error is sometimes incorrect. There is an opened ticket about this bug: 
-  http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717 
-  The script currently works around it by doing pattern matching with  
-  information context but it is not a perfect workaround: it can cause 
-  spurious highlighting of errors in rare cases.
+Bugs:  
+  Column number reported by LanguageTool indicating the location of the 
+  error is sometimes incorrect. There is an opened ticket about this bug: 
+  http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717 
+  The script currently works around it by doing pattern matching with  
+  information context but it is not a perfect workaround: it can cause 
+  spurious highlighting of errors in rare cases. This bug is fixed in
+  the latest version of LanguageTool-1.8.
 
 License:
-  The VIM LICENSE applies to LanguageTool.vim plugin
-  (see ":help copyright" except use "LanguageTool.vim" instead of Vim").
+  The VIM LICENSE applies to LanguageTool.vim plugin
+  (see ":help copyright" except use "LanguageTool.vim" instead of Vim").
