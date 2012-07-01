@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 26 Jun 2012
+Last Change: 01 Jul 2012
 
 For Vim version 7.0 and above
 
@@ -28,15 +28,16 @@ languages.
 
 LanguageTool detects grammar mistakes that a spelling checker cannot detect
 such as "it work" instead of "it works". Since version 1.8, LanguageTool can
-now also detect spelling mistakes using Hunspell dictionaries bundled with
-LanguageTool for several languages or morfologik for some languages. Vim
-builtin spelling checker can also of course be used along with LanguageTool.
-One advantage of the spelling checker of LanguageTool over Vim spelling
-checker, is that it uses native Hunspell dictionary directly, so it works
-even with the latest Hunspell dictionaries containing features not supported
-by Vim. For example, the latest French Hunspell dictionaries from
-http://www.dicollect.org are not supported by Vim but they work well
-with LanguageTool. On the other hand, the Vim spelling checker is faster.
+can also detect spelling mistakes using Hunspell dictionaries bundled with
+LanguageTool for several languages or using morfologik for other languages.
+Vim builtin spelling checker can also of course be used along with
+LanguageTool. One advantage of the spelling checker of LanguageTool over
+Vim spelling checker, is that it uses the native Hunspell dictionary directly,
+so it works even with the latest Hunspell dictionaries containing features
+not supported by Vim. For example, the latest French Hunspell dictionaries
+from http://www.dicollect.org are not supported by Vim but they work well
+with LanguageTool. On the other hand, the Vim spelling checker is faster
+and has better suggestions.
 
 See http://www.languagetool.org/ for more information about LanguageTool.
 
@@ -51,7 +52,7 @@ an idea of what the LanguageTool plugin does:
   http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
 
 A screencast demo is also available at:
-  
+
   http://shelr.tv/records/4fba8ef99660803e4f00001f
 
 ============================================================================
@@ -72,8 +73,8 @@ LanguageTool can be downloaded from:
 
 4.1 Installing the plugin~
 
-Unzip file LanguageTool.zip in your personal |vimfiles| directory (~/.vim
-under Unix or %HOMEPATH%\vimfiles under Windows): >
+Unzip file LanguageTool.zip plugin from in your personal |vimfiles| directory
+(~/.vim under Unix or %HOMEPATH%\vimfiles under Windows): >
 
   $ mkdir ~/.vim
   $ cd ~/.vim
@@ -95,29 +96,23 @@ You have to enable plugins by adding these two lines in your |.vimrc| file: >
 To use this plugin, you need to install the Java LanguageTool program. You
 can choose to:
 
-* download LanguageTool.oxt plugin for OpenOffice: this plugin has
-  no Hunspell dictionaries.
-* or download LanguageTool.zip which includes spelling dictionaries.
+* download stand-alone version of LanguageTool (LanguageTool-stable.zip) from:
+  http://www.languagetool.org/. The standalone version of Vim not
+  only does grammar checking but also contains Hunspell dictionaries
+  for spell checking.
+* or download a nightly build LanguageTool-.*-snapshot.zip from
+  http://www.languagetool.org/download/snapshots/. It contains a more
+  recent version than the stable version but it is not as well tested.
 * or checkout and build the latest LanguageTool from sources in subversion.
-  This also includes spelling dictionaries.
 
 4.2.1 Download LanguageTool plugin for OpenOffice~
 
-Download the OpenOffice LanguageTool plugin file LanguageTool-*.oxt and
-unzip it: >
+Download the stand-alone version of LanguageTool (LanguageTool-stable.zip)
+from http://www.languagetool.org/ and unzip it: >
 
-  $ wget http://www.languagetool.org/download/LanguageTool-1.7.oxt
-  $ unzip LanguageTool-1.7.oxt
+  $ unzip LanguageTool-stable.zip
 
 This should extract LanguageTool.jar among several other files.
-
-You may find more recent versions at:
-
-  http://www.languagetool.org/download/
-
-Daily builds are also available:
-
-  http://www.languagetool.org/download/snapshots/
 
 4.2.2 Build LanguageTool from sources in Subversion~
 
@@ -142,7 +137,7 @@ LanguageTool.jar in your $HOME/.vimrc file: >
 
   let g:languagetool_jar='$HOME/languagetool/dist/LanguageTool.jar'
 
-See section |languagetool-configuration| for more settings.
+See section |languagetool-configuration| for more optional settings.
 
 ============================================================================
 
@@ -162,12 +157,12 @@ g:languagetool_jar                                       *g:languagetool_jar*
 
 g:languagetool_lang
 
-  The language ISO code (2 letters) to use for the language tool checker.
-  If undefined, plugin selects the language of the Vim spelling
-  checker 'spelllang'. If neither g:languagetool_lang or 'spelllang'
-  are defined, plugin defaults to English (en_US). Starting with
-  LanguageTool-1.8, regional variants of some languages can be specified.
-  The valid language codes in LanguageTool-1.8 are: >
+  The language code to use for the language tool checker. If undefined,
+  plugin tries to guess the language of the Vim spelling checker
+  'spelllang' or v:lang. If neither works, plugin defaults to to
+  English (en). Starting with LanguageTool-1.8, regional variants
+  of some languages can be specified. The valid language codes in
+  LanguageTool-1.8 are: >
 
     ast    Asturian
     be     Belarusian

@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/06/26
-" Version:      1.20
+" Last Change:  2012/07/01
+" Version:      1.21
 "
 " Long Description:
 "
@@ -86,6 +86,66 @@ if &cp || exists("g:loaded_languagetool")
 endif
 let g:loaded_languagetool = "1"
 
+" Guess language from 'a:lang' (either 'spelllang' or 'v:lang')
+function s:FindLanguage(lang)
+  " This replaces things like en_gb en-GB as expected by LanguageTool,
+  " only for languages that support variants in LanguageTool.
+  let l:language = substitute(substitute(a:lang,
+  \  '\(\a\{2,3}\)\(_\a\a\)\?.*',
+  \  '\=tolower(submatch(1)) . toupper(submatch(2))', ''),
+  \  '_', '-', '')
+
+  " All supported languages by LanguageTool-1.8.
+  let l:supportedLanguages =  {
+  \  'ast'   : 1,
+  \  'be'    : 1,
+  \  'br'    : 1,
+  \  'ca'    : 1,
+  \  'cs'    : 1,
+  \  'da'    : 1,
+  \  'de'    : 1,
+  \  'de-AT' : 1,
+  \  'de-CH' : 1,
+  \  'de-DE' : 1,
+  \  'el'    : 1,
+  \  'en'    : 1,
+  \  'en-AU' : 1,
+  \  'en-CA' : 1,
+  \  'en-GB' : 1,
+  \  'en-NZ' : 1,
+  \  'en-US' : 1,
+  \  'en-ZA' : 1,
+  \  'eo'    : 1,
+  \  'es'    : 1,
+  \  'fr'    : 1,
+  \  'gl'    : 1,
+  \  'is'    : 1,
+  \  'it'    : 1,
+  \  'km'    : 1,
+  \  'lt'    : 1,
+  \  'ml'    : 1,
+  \  'nl'    : 1,
+  \  'pl'    : 1,
+  \  'pt'    : 1,
+  \  'ro'    : 1,
+  \  'ru'    : 1,
+  \  'sk'    : 1,
+  \  'sl'    : 1,
+  \  'sv'    : 1,
+  \  'tl'    : 1,
+  \  'uk'    : 1,
+  \  'zh'    : 1
+  \}
+
+  if has_key(l:supportedLanguages, l:language)
+    return l:language
+  endif
+
+  " Removing the region (if any) and trying again.
+  let l:language = substitute(l:language, '-.*', '', '')
+  return has_key(l:supportedLanguages, l:language) ? l:language : ''
+endfunction
+
 " Return a regular expression used to highlight a grammatical error
 " at line a:line in text.  The error starts at character a:start in
 " context a:context and its length in context is a:len.
@@ -130,19 +190,22 @@ function s:LanguageToolSetUp()
   \ : 14
   let s:languagetool_encoding = &fenc ? &fenc : &enc
 
+  " Setting up language...
   if exists("g:languagetool_lang")
     let s:languagetool_lang = g:languagetool_lang
   else
-    " This replaces things like en_gb (from &spelllang) into
-    " en-GB as expected by LanguageTool, only for languages
-    " that support variants in LanguageTool.
-    let s:languagetool_lang = (&spelllang == '')
-    \ ? 'en-US'
-    \ : substitute(
-    \     substitute(&spelllang,
-    \       '\([^_]*\)\(_\(au\|ca\|gb\|nz\|us\|za\|\at\|ch\|de\)\)\?',
-    \       '\=submatch(1) . toupper(submatch(2))', ''),
-    \     '_', '-', '')
+    " Trying to guess language from 'spelllang' or 'v:lang'.
+    let s:languagetool_lang = s:FindLanguage(&spelllang)
+    if s:languagetool_lang == ''
+      let s:languagetool_lang = s:FindLanguage(v:lang)
+      if s:languagetool_lang == ''
+        echoerr 'Failed to guess language from spelllang=['
+        \ . &spelllang . '] or from v:lang=[' . v:lang . ']. '
+        \ . 'Defauling to English (en). '
+        \ . 'See ":help LanguageTool" regarding setting g:languagetool_lang.'
+        let s:languagetool_lang = 'en'
+      endif
+    endif
   endif
 
   let s:languagetool_jar = exists("g:languagetool_jar")
