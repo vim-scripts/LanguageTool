@@ -2,10 +2,10 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/07/01
-" Version:      1.21
+" Last Change:  2012/09/21
+" Version:      1.22
 "
-" Long Description:
+" Long Description: {{{1
 "
 " This plugin integrates the LanguageTool grammar checker into Vim.
 " Current version of LanguageTool can check grammar in many languages:
@@ -37,7 +37,7 @@
 "
 " See  :help LanguageTool  for more details
 "
-" Install Details:
+" Install Details: {{{1
 "
 " Install the plugin with:
 "
@@ -76,18 +76,19 @@
 "
 "   let g:languagetool_jar=$HOME . '/languagetool/LanguageTool.jar'
 "
-" License:
+" License: {{{1
 "
 " The VIM LICENSE applies to LanguageTool.vim plugin
 " (see ":help copyright" except use "LanguageTool.vim" instead of "Vim").
-"
+" 
+" Plugin set up {{{1
 if &cp || exists("g:loaded_languagetool")
  finish
 endif
 let g:loaded_languagetool = "1"
 
 " Guess language from 'a:lang' (either 'spelllang' or 'v:lang')
-function s:FindLanguage(lang)
+function s:FindLanguage(lang) "{{{1
   " This replaces things like en_gb en-GB as expected by LanguageTool,
   " only for languages that support variants in LanguageTool.
   let l:language = substitute(substitute(a:lang,
@@ -149,7 +150,7 @@ endfunction
 " Return a regular expression used to highlight a grammatical error
 " at line a:line in text.  The error starts at character a:start in
 " context a:context and its length in context is a:len.
-function s:LanguageToolHighlightRegex(line, context, start, len)
+function s:LanguageToolHighlightRegex(line, context, start, len)  "{{{1
   let l:start_idx     = byteidx(a:context, a:start)
   let l:end_idx       = byteidx(a:context, a:start + a:len) - 1
   let l:start_ctx_idx = byteidx(a:context, a:start + a:len)
@@ -167,7 +168,7 @@ function s:LanguageToolHighlightRegex(line, context, start, len)
 endfunction
 
 " Unescape XML special characters in a:text.
-function s:XmlUnescape(text)
+function s:XmlUnescape(text) "{{{1
   " Change XML escape char such as &quot; into "
   " Substitution of &amp; must be done last or else something
   " like &amp;quot; would get first transformed into &quot;
@@ -179,9 +180,16 @@ function s:XmlUnescape(text)
   return          substitute(l:escaped, '&amp;',  '\&', 'g')
 endfunction
 
+" Parse a xml attribute such as: ruleId="FOO" in line a:line.
+" where ruleId is the key a:key, and FOO is the returned value corresponding
+" to that key.
+function s:ParseKeyValue(key, line) "{{{1 
+  return s:XmlUnescape(matchstr(a:line, '\<' . a:key . '="\zs[^"]*\ze"'))
+endfunction
+
 " Set up configuration.
 " Returns 0 if success, < 0 in case of error.
-function s:LanguageToolSetUp()
+function s:LanguageToolSetUp() "{{{1
   let s:languagetool_disable_rules = exists("g:languagetool_disable_rules")
   \ ? g:languagetool_disable_rules
   \ : 'WHITESPACE_RULE,EN_QUOTES'
@@ -228,32 +236,30 @@ endfunction
 
 " Jump to a grammar mistake (called when pressing <Enter>
 " on a particular error in scratch buffer).
-function <sid>JumpToCurrentError()
+function <sid>JumpToCurrentError() "{{{1
   let l:save_cursor = getpos('.')
-  norm $
+  norm! $
   if search('^Error:\s\+', 'beW') > 0
     let l:error_idx = expand('<cword>')
     let l:error = s:errors[l:error_idx - 1]
-    let l:line = l:error[0]
-    let l:col  = l:error[1]
-    let l:rule = l:error[4]
+    let l:line = l:error['fromy']
+    let l:col  = l:error['fromx']
+    let l:rule = l:error['ruleId']
     call setpos('.', l:save_cursor)
     exe s:languagetool_text_win . 'wincmd w'
-    exe 'norm ' . l:line . 'G0'
+    exe 'norm! ' . l:line . 'G0'
 
-    " The line number is correct but the column number given by LanguageTool is
-    " sometimes incorrect. See opened ticket:
-    " http://sourceforge.net/tracker/?func=detail&aid=3054895&group_id=110216&atid=655717
-    " So finding the column is done using pattern matching with information
+    " Finding the column is done using pattern matching with information
     " in error context.
-    let l:context = l:error[7][byteidx(l:error[7], l:error[8])
-    \                         :byteidx(l:error[7], l:error[8] + l:error[9]) - 1]
-    let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[7], l:error[8], l:error[9])
+    let l:context = l:error['replacements'][byteidx(l:error['replacements'], l:error['context'])
+    \      :byteidx(l:error['replacements'], l:error['context'] + l:error['contextoffset']) - 1]
+    let l:re = s:LanguageToolHighlightRegex(l:error['fromy'], l:error['replacements'],
+    \      l:error['context'], l:error['contextoffset'])
     echon 'Jump to error ' . l:error_idx . '/' . len(s:errors)
     \ . ' (' . l:rule . ') ...' . l:context . '... @ '
     \ . l:line . 'L ' . l:col . 'C'
     call search(l:re)
-    norm zz
+    norm! zz
   else
     call setpos('.', l:save_cursor)
   endif
@@ -266,7 +272,7 @@ endfunction
 " a:line1 and a:line2 parameters are the first and last line number of
 " the range of line to check.
 " Returns 0 if success, < 0 in case of error.
-function s:LanguageToolCheck(line1, line2)
+function s:LanguageToolCheck(line1, line2) "{{{1
   let l:save_cursor = getpos('.')
   if s:LanguageToolSetUp() < 0
     return -1
@@ -308,56 +314,24 @@ function s:LanguageToolCheck(line1, line2)
   " collect information about all errors in list s:errors
   let s:errors = []
   while search('^<error ', 'eW') > 0
-    let l:l  = getline('.')
+    let l:l = getline('.')
     " The fromx and tox given by LanguageTool are not reliable.
     " They are even sometimes negative!
-    let l:l1 = matchlist(l:l, 'fromy=\"\(\d\+\)\"\s\+'
-    \ .                       'fromx=\"\(-\?\d\+\)\"\s\+'
-    \ .                         'toy=\"\(\d\+\)\"\s\+'
-    \ .                         'tox=\"\(-\?\d\+\)\"\s\+'
-    \ .                      'ruleId=\"\([^"]*\)\"')
 
-    " From LanguageTool-1.0 to LanguageTool-1.1, subId=(...) was
-    " introduced in XML output.
-    let l:l2 = matchlist(l:l, 'subId=\"\(\d\+\)\"')
-    let l:l3 = matchlist(l:l, 'msg=\"\([^"]*\)\"\s\+'
-    \ .              'replacements=\"\([^"]*\)\"\s\+'
-    \ .                   'context=\"\([^"]*\)\"\s\+'
-    \ .             'contextoffset=\"\(\d\+\)\"\s\+'
-    \ .               'errorlength=\"\(\d\+\)\"')
-
-    " From LanguageTool-1.7 to LanguageTool-1.8 and optional
-    " url="..." was introduced in XML output.
-    let l:l4 = matchlist(l:l, 'url=\"\([^"]*\)\"')
-
-    " l:error[0] ... fromy
-    " l:error[1] ... fromx
-    " l:error[2] ... toy
-    " l:error[3] ... tox
-    " l:error[4] ... ruleId
-    " l:error[5] ... subId
-    " l:error[6] ... msg
-    " l:error[7] ... replacement
-    " l:error[8] ... context
-    " l:error[9] ... contextoffset
-    " l:error[10] .. errorlength
-    " l:error[11] .. url
-    let l:error = l:l1[1:5]
-    \           + (len(l:l2) > 0 ? ([':' . l:l2[1]]) : [''])
-    \           + l:l3[1:5]
-    \           + (len(l:l4) > 0 ? ([l:l4[1]]) : [''])
+    let l:error= {}
+    for l:k in [ 'fromy', 'fromx', 'tox', 'toy',
+    \            'ruleId', 'subId', 'msg', 'replacements',
+    \            'context', 'contextoffset', 'errorlength', 'url' ]
+      let l:error[l:k] = s:ParseKeyValue(l:k, l:l)
+    endfor
 
     " Make line/column number start at 1 rather than 0.
     " Make also line number absolute as in buffer.
-    let l:error[0] += a:line1
-    let l:error[1] += 1
-    let l:error[2] += a:line1
-    let l:error[3] += 1
+    let l:error['fromy'] += a:line1
+    let l:error['fromx'] += 1
+    let l:error['toy']   += a:line1
+    let l:error['tox']   += 1
 
-    let l:error[6]  = s:XmlUnescape(l:error[6])
-    let l:error[8]  = s:XmlUnescape(l:error[8])
-    let l:error[7]  = s:XmlUnescape(l:error[7])
-    let l:error[11] = s:XmlUnescape(l:error[11])
     call add(s:errors, l:error)
   endwhile
 
@@ -378,37 +352,37 @@ function s:LanguageToolCheck(line1, line2)
     for l:error in s:errors
       call append('$', 'Error:      '
       \ . (l:i + 1) . '/' . len(s:errors)
-      \ . ' ('  . l:error[4] . l:error[5] . ')'
-      \ . ' @ ' . l:error[0] . 'L ' . l:error[1] . 'C')
-      call append('$', 'Message:    ' . l:error[6])
-      call append('$', 'Context:    ' . l:error[8])
+      \ . ' ('  . l:error['ruleId'] . ':' . l:error['subId'] . ')'
+      \ . ' @ ' . l:error['fromy'] . 'L ' . l:error['fromx'] . 'C')
+      call append('$', 'Message:    '     . l:error['msg'])
+      call append('$', 'Context:    '     . l:error['context'])
 
-      if l:error[4] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
+      if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
         exe "syn match LanguageToolSpellingError '"
         \ . '\%'  . line('$') . 'l\%9c'
-        \ . '.\{' . (4 + l:error[9]) . '}\zs'
-        \ . '.\{' .     (l:error[10]) . "}'"
+        \ . '.\{' . (4 + l:error['contextoffset']) . '}\zs'
+        \ . '.\{' .     (l:error['errorlength']) . "}'"
       else
         exe "syn match LanguageToolGrammarError '"
         \ . '\%'  . line('$') . 'l\%9c'
-        \ . '.\{' . (4 + l:error[9]) . '}\zs'
-        \ . '.\{' .     (l:error[10]) . "}'"
+        \ . '.\{' . (4 + l:error['contextoffset']) . '}\zs'
+        \ . '.\{' .     (l:error['errorlength']) . "}'"
       endif
-      if len(l:error[7]) > 0
-        call append('$', 'Correction: ' . l:error[7])
+      if len(l:error['replacements']) > 0
+        call append('$', 'Correction: ' . l:error['replacements'])
       endif
-      if len(l:error[11]) > 0
-        call append('$', 'More info:  ' . l:error[11])
+      if len(l:error['url'])
+        call append('$', 'More info:  ' . l:error['url'])
       endif
       call append('$', '')
       let l:i += 1
     endfor
-    exe "norm z" . s:languagetool_win_height . "\<CR>"
+    exe "norm! z" . s:languagetool_win_height . "\<CR>"
     0
     map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError()<CR>
     redraw
     echon 'Press <Enter> on error in scratch buffer to jump its location'
-    exe "norm \<C-W>\<C-P>"
+    exe "norm! \<C-W>\<C-P>"
   else
     " Negative s:languagetool_win_height -> no scratch window.
     bd!
@@ -419,17 +393,20 @@ function s:LanguageToolCheck(line1, line2)
   " Also highlight errors in original buffer and populate location list.
   setlocal errorformat=%f:%l:%c:%m
   for l:error in s:errors
-    let l:re = s:LanguageToolHighlightRegex(l:error[0], l:error[8], l:error[9], l:error[10])
-    if l:error[4] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
+    let l:re = s:LanguageToolHighlightRegex(l:error['fromy'],
+    \                                       l:error['context'],
+    \                                       l:error['contextoffset'],
+    \                                       l:error['errorlength'])
+    if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
       exe "syn match LanguageToolSpellingError '" . l:re . "'"
       laddexpr expand('%') . ':'
-      \ . l:error[0] . ':' . l:error[1] . ':'
-      \ . l:error[4] . ' ' . l:error[6]
+      \ . l:error['fromy'] . ':'  . l:error['fromx'] . ':'
+      \ . l:error['ruleId'] . ' ' . l:error['msg']
     else
       exe "syn match LanguageToolGrammarError '" . l:re . "'"
       laddexpr expand('%') . ':'
-      \ . l:error[0] . ':' . l:error[1] . ':'
-      \ . l:error[4] . ' ' . l:error[6]
+      \ . l:error['fromy'] . ':'  . l:error['fromx'] . ':'
+      \ . l:error['ruleId'] . ' ' . l:error['msg']
     endif
   endfor
   return 0
@@ -437,7 +414,7 @@ endfunction
 
 " This function clears syntax highlighting created by LanguageTool plugin
 " and removes the scratch window containing grammar errors.
-function s:LanguageToolClear()
+function s:LanguageToolClear() "{{{1
   if exists('s:languagetool_error_buffer')
     if bufexists(s:languagetool_error_buffer)
       sil! exe "bd! " . s:languagetool_error_buffer
@@ -465,6 +442,8 @@ hi def link LanguageToolSpellingError WarningMsg
 hi def link LanguageToolErrorCount    Title
 hi def link LanguageToolUrl           Underlined
 
+" Defines commands {{{1
 com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
 com! -nargs=0 -range=% LanguageToolCheck :call s:LanguageToolCheck(<line1>,
                                                                  \ <line2>)
+" vim: fdm=marker
