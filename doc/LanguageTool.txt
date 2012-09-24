@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 01 Jul 2012
+Last Change: 24 Sep 2012
 
 For Vim version 7.0 and above
 
@@ -249,6 +249,11 @@ The default range is 1,$ (whole buffer).
 Use the |:LanguageToolClear| command to clear highlighting of grammar
 mistakes, close the scratch window containing the list of errors, clear
 and close the location-list.
+
+The two commands are also available from the menu in gvim: >
+
+  Plugin -> LanguageTool -> Check
+                         -> Clear
 
 Using the error scratch window~
 

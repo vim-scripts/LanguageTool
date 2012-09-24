@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/09/21
-" Version:      1.22
+" Last Change:  2012/09/24
+" Version:      1.23
 "
 " Long Description: {{{1
 "
@@ -368,10 +368,10 @@ function s:LanguageToolCheck(line1, line2) "{{{1
         \ . '.\{' . (4 + l:error['contextoffset']) . '}\zs'
         \ . '.\{' .     (l:error['errorlength']) . "}'"
       endif
-      if len(l:error['replacements']) > 0
+      if !empty(l:error['replacements'])
         call append('$', 'Correction: ' . l:error['replacements'])
       endif
-      if len(l:error['url'])
+      if !empty(l:error['url'])
         call append('$', 'More info:  ' . l:error['url'])
       endif
       call append('$', '')
@@ -441,6 +441,12 @@ hi def link LanguageToolGrammarError  Error
 hi def link LanguageToolSpellingError WarningMsg
 hi def link LanguageToolErrorCount    Title
 hi def link LanguageToolUrl           Underlined
+
+" Section: Menu items {{{1
+if has("gui_running") && has("menu") && &go =~ 'm'
+  amenu <silent> &Plugin.LanguageTool.Chec&k :LanguageToolCheck<CR>
+  amenu <silent> &Plugin.LanguageTool.Clea&r :LanguageToolClear<CR>
+endif
 
 " Defines commands {{{1
 com! -nargs=0          LanguageToolClear :call s:LanguageToolClear()
