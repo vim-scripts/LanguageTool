@@ -2,8 +2,8 @@
 " Maintainer:   Dominique Pellé <dominique.pelle@gmail.com>
 " Screenshots:  http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_en.png
 "               http://dominique.pelle.free.fr/pic/LanguageToolVimPlugin_fr.png
-" Last Change:  2012/09/24
-" Version:      1.23
+" Last Change:  2013/02/08
+" Version:      1.25
 "
 " Long Description: {{{1
 "
@@ -49,32 +49,36 @@
 " You also need to install the Java LanguageTool program in order to use
 " this plugin. There are 3 possibilities:
 "
-" 1/ Download the latest official OpenOffice/LibreOffice LanguageTool plugin
-"    file LanguageTool-*.oxt from http://www.languagetool.org/
-"    Unzip it. This should extract LanguageTool.jar among several other files
+" 1/ Download the stand-alone latest version of LanguageTool file
+"    (LanguageTool-*.zip) from http://www.languagetool.org/ and
+"    Unzip it. This should extract LanguageTool.jar among several
+"    other files.
 "
 " 2/ Or download an unofficial nightly build available at:
 "    http://www.languagetool.org/download/snapshots/
 "
 " 3/ Or download the latest LanguageTool from subversion and build
 "    it. This ensures that you get the latest version. On Ubuntu, you need
-"    to install the ant, openjdk-6-jdk and subversion packages as a
+"    to install the maven, openjdk-7-jdk and subversion packages as a
 "    prerequisite:
 "
-"    $ sudo apt-get install openjdk-6-jdk ant subversion
+"    $ sudo apt-get install openjdk-7-jdk maven subversion
 "
 "    LanguageTool can then be downloaded and built as follows:
 "
-"    $ svn co https://languagetool.svn.sourceforge.net/svnroot/languagetool/trunk/JLanguageTool languagetool
+"    $ svn co https://languagetool.svn.sourceforge.net/svnroot/languagetool/trunk/languagetool
 "    $ cd languagetool
-"    $ ant
+"    $ mvn package
 "
-"    This should build languagetool/dist/LanguageTool.jar.
+"    This should build the command line version of LanguageTool:
+"
+"    ./languagetool-standalone/target/LanguageTool-2.1-SNAPSHOT/LanguageTool-2.1-SNAPSHOT/languagetool-commandline.jar
 "
 " You then need to set up g:languagetool_jar in your ~/.vimrc with
-" the location of this LanguageTool.jar file. For example:
+" the location of this languagetool-commandline.jar file (or
+" LanguageTool.jar prior to version 2.1). For example:
 "
-"   let g:languagetool_jar=$HOME . '/languagetool/LanguageTool.jar'
+"  let g:languagetool_jar='$HOME/languagetool/languagetool-standalone/target/LanguageTool-2.1-SNAPSHOT/LanguageTool-2.1-SNAPSHOT/languagetool-commandline.jar'
 "
 " License: {{{1
 "
@@ -96,7 +100,7 @@ function s:FindLanguage(lang) "{{{1
   \  '\=tolower(submatch(1)) . toupper(submatch(2))', ''),
   \  '_', '-', '')
 
-  " All supported languages by LanguageTool-1.8.
+  " All supported languages (with variants) from version LanguageTool-1.8.
   let l:supportedLanguages =  {
   \  'ast'   : 1,
   \  'be'    : 1,

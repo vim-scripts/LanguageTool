@@ -106,7 +106,7 @@ can choose to:
   recent version than the stable version but it is not as well tested.
 * or checkout and build the latest LanguageTool from sources in subversion.
 
-4.2.1 Download LanguageTool plugin for OpenOffice~
+4.2.1 Download the stand-alone version of LanguageTool
 
 Download the stand-alone version of LanguageTool (LanguageTool-*.zip)
 from http://www.languagetool.org/ and unzip it: >
