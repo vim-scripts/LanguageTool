@@ -36,7 +36,7 @@ Bugs:
   The script currently works around it by doing pattern matching with  
   information context but it is not a perfect workaround: it can cause 
   spurious highlighting of errors in rare cases. This bug is fixed in
-  the latest version of LanguageTool-1.8.
+  LanguageTool-1.8.
 
 License:
   The VIM LICENSE applies to LanguageTool.vim plugin

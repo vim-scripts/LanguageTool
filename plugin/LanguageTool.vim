@@ -80,7 +80,7 @@
 "
 " The VIM LICENSE applies to LanguageTool.vim plugin
 " (see ":help copyright" except use "LanguageTool.vim" instead of "Vim").
-" 
+"
 " Plugin set up {{{1
 if &cp || exists("g:loaded_languagetool")
  finish
@@ -183,7 +183,7 @@ endfunction
 " Parse a xml attribute such as: ruleId="FOO" in line a:line.
 " where ruleId is the key a:key, and FOO is the returned value corresponding
 " to that key.
-function s:ParseKeyValue(key, line) "{{{1 
+function s:ParseKeyValue(key, line) "{{{1
   return s:XmlUnescape(matchstr(a:line, '\<' . a:key . '="\zs[^"]*\ze"'))
 endfunction
 
@@ -209,9 +209,9 @@ function s:LanguageToolSetUp() "{{{1
       if s:languagetool_lang == ''
         echoerr 'Failed to guess language from spelllang=['
         \ . &spelllang . '] or from v:lang=[' . v:lang . ']. '
-        \ . 'Defauling to English (en). '
+        \ . 'Defauling to English (en-US). '
         \ . 'See ":help LanguageTool" regarding setting g:languagetool_lang.'
-        let s:languagetool_lang = 'en'
+        let s:languagetool_lang = 'en-US'
       endif
     endif
   endif
@@ -357,7 +357,7 @@ function s:LanguageToolCheck(line1, line2) "{{{1
       call append('$', 'Message:    '     . l:error['msg'])
       call append('$', 'Context:    '     . l:error['context'])
 
-      if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
+      if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*\|GERMAN_SPELLER_RULE'
         exe "syn match LanguageToolSpellingError '"
         \ . '\%'  . line('$') . 'l\%9c'
         \ . '.\{' . (4 + l:error['contextoffset']) . '}\zs'
@@ -379,7 +379,7 @@ function s:LanguageToolCheck(line1, line2) "{{{1
     endfor
     exe "norm! z" . s:languagetool_win_height . "\<CR>"
     0
-    map <silent> <buffer> <CR>          :call <sid>JumpToCurrentError()<CR>
+    map <silent> <buffer> <CR> :call <sid>JumpToCurrentError()<CR>
     redraw
     echon 'Press <Enter> on error in scratch buffer to jump its location'
     exe "norm! \<C-W>\<C-P>"
@@ -397,7 +397,7 @@ function s:LanguageToolCheck(line1, line2) "{{{1
     \                                       l:error['context'],
     \                                       l:error['contextoffset'],
     \                                       l:error['errorlength'])
-    if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*'
+    if l:error['ruleId'] =~ 'HUNSPELL_RULE\|HUNSPELL_NO_SUGGEST_RULE\|MORFOLOGIK_RULE_.*\|GERMAN_SPELLER_RULE'
       exe "syn match LanguageToolSpellingError '" . l:re . "'"
       laddexpr expand('%') . ':'
       \ . l:error['fromy'] . ':'  . l:error['fromx'] . ':'
