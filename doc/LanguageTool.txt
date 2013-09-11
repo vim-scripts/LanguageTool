@@ -2,7 +2,7 @@
 *LanguageTool*
 
 Author:      Dominique Pellé <dominique.pelle@gmail.com>
-Last Change: 08 Feb 2013
+Last Change: 10 Aug 2013
 
 For Vim version 7.0 and above
 
@@ -111,7 +111,7 @@ can choose to:
 Download the stand-alone version of LanguageTool (LanguageTool-*.zip)
 from http://www.languagetool.org/ and unzip it: >
 
-  $ unzip LanguageTool-2.0.zip
+  $ unzip LanguageTool-2.2.zip
 
 This should extract LanguageTool.jar among several other files.
 
@@ -123,28 +123,22 @@ following packages: >
 
   $ sudo apt-get install openjdk-7-jdk mvn subversion
 
-Since version 2.1, LanguageTool is built with Maven. Prior to version 2.1,
-it was built with ant.
-
 LanguageTool can then be downloaded and built with Maven as follows: >
 
-  $ svn co https://languagetool.svn.sourceforge.net/svnroot/languagetool/trunk/languagetool
+  $ git clone https://github.com/languagetool-org/languagetool.git
   $ cd languagetool
   $ mvn clean package
 
 After the build, the command line version of LanguageTool can be found in: >
 
-  ./languagetool-standalone/target/LanguageTool-2.1-SNAPSHOT/LanguageTool-2.1-SNAPSHOT/languagetool-commandline.jar
+  ./languagetool-standalone/target/LanguageTool-2.3-SNAPSHOT/LanguageTool-2.3-SNAPSHOT/languagetool-commandline.jar
 
 4.3 Configuring the location of LanguageTool.jar~
 
 After installing LanguageTool, you must specify the location of the file
 LanguageTool.jar in your $HOME/.vimrc file. Example: >
 
-  let g:languagetool_jar='$HOME/languagetool/languagetool-standalone/target/LanguageTool-2.1-SNAPSHOT/LanguageTool-2.1-SNAPSHOT/languagetool-commandline.jar'
-
-Prior to LanguageTool-2.1, the command line version of LanguageTool
-was called LanguageTool.jar.
+  let g:languagetool_jar='$HOME/languagetool/languagetool-standalone/target/LanguageTool-2.3-SNAPSHOT/LanguageTool-2.3-SNAPSHOT/languagetool-commandline.jar'
 
 See section |languagetool-configuration| for more optional settings.
 
@@ -161,8 +155,11 @@ of the LanguageTool plugin.
 g:languagetool_jar                                       *g:languagetool_jar*
 
   This variable specifies the location of the LanguageTool java grammar
-  checker program.
-  Default is: $HOME/languagetool/dist/LanguageTool.jar
+  checker program.  Default is empty.
+
+  Example: >
+
+  :let g:languagetool_jar='$HOME/languagetool/languagetool-standalone/target/LanguageTool-2.3-SNAPSHOT/LanguageTool-2.3-SNAPSHOT/languagetool-commandline.jar'
 
 g:languagetool_lang
 
@@ -176,7 +173,7 @@ g:languagetool_lang
   In other words, with  :set spelllang=en  LanguageTool only
   signals grammar mistakes whereas with  :set spellllang=en_us
   LanguageTool signals spelling mistakes and grammar mistakes.
-  The valid language codes in LanguageTool-2.1 are: >
+  The valid language codes are: >
 
     ast    Asturian
     be     Belarusian
